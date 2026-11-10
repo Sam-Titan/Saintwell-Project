@@ -4,13 +4,36 @@ Claude Code: add a new entry at the TOP at the end of every session. Keep it sho
 
 ## Current state
 
-- Phase: **3 — Hero scene**, built, waiting for Sam's review (see `git log origin/main..main`)
+- Phase: **3 — Hero scene** reworked into two jars + scroll open/close (D-57 to D-61), waiting for Sam's review (see `git log origin/main..main`)
 - Branch: `main` (only branch)
 - Blockers: none
 
 ---
 
 ## Session log
+
+### 2026-11-10 — Two jars + scroll open/close
+**Done**
+- Docs first: D-57 (Green A + Pink A side by side, picker/toggle gone), D-58 (split theme, green = brand default for shared elements), D-59 (native scroll replaces drei ScrollControls; D-23 superseded; timeline), D-60 (`JarContext` holds scroll progress), D-61 (staggered layout on phones). SPEC sections 3 and 4, PHASES, BACKLOG #12 updated.
+- `src/three/storyTimeline.ts` (pure, unit tested): hero 0-0.10, caps lift 0.10-0.28, gummies out 0.22-0.55, hold 0.55-0.72, gummies back 0.72-0.88, caps close 0.88-1. Headline fades out at p ~0.06-0.12 and returns when scrolling up.
+- `Story.tsx`: 500vh section + sticky stage; Motion `useScroll` + `useSpring` (steady on keyboard jumps) -> progress. Canvas reads it in `useFrame`, no React re-render per tick. Two jars, caps lift and unscrew, sage / pink gummies (instanced, per jar) rise through the neck and sink back. Jars turn in the hero, ease to face front while open, turn again at the end.
+- Camera fits the frame (jars + lifted caps + gummies) to any screen. Phones (< 640 px): staggered layout (pink behind and lower), jars about 30 % bigger than side by side. Both shown in screenshots.
+- Tiers: none = two images side by side (no tall scroll); low = same timeline, 8 gummies per jar, no transmission; reduced motion = still closed jars, no tall scroll, headline stays.
+- Removed: RadioGroup, Hero, GummiesInside, picker copy, colour/label state. Three.js stays out of the main bundle (labels preloaded by dynamic import).
+- `just check` and `just test` pass (vitest 26+, 9 e2e: scroll drives progress, small wheel step stays under 0.1, PageDown/Space/ArrowDown/End all drive the story, no external requests, fallback, low, reduced motion).
+- Screenshots (p = 0, 20, 40, 60, 80, 100 %): `.playwright-mcp/story-desktop-side-p*.png`, `story-mobile-side-p*.png`, `story-mobile-stagger-p*.png`.
+- `just lighthouse` (fallback path here): Perf 93, A11y 100, BP 100, SEO 83 (meta description, robots.txt: Phase 5).
+
+**Notes for Sam**
+- Keyboard scrolling works, but in **high** tier on this no-GPU machine the page is too slow (2-3 fps) to react to keys in time, so that e2e test uses `?tier=low`. Needs a real GPU check in Phase 6.
+- Split theme exists as a rule (D-58); nothing uses the pink side colours yet. They appear in the night fade / cards (rest of Phase 4).
+- Gummy size and cap lift (1.3 units) are my first guess; tell me if you want them bigger/smaller. Green gummies show only outside the jar (opaque jar).
+- fps still software only: not measured as a gate (D-55).
+
+**Next**
+- Sam: review screenshots + commits, approve, push. Then the rest of Phase 4 (night/morning fade, moon/stars, ingredient cards, benefits, badges, About, Footer) on this timeline.
+
+---
 
 ### 2026-11-10 — Phase 3 follow-ups
 **Done**
