@@ -7,7 +7,9 @@ import {
 	easeOutBack,
 	gummyPath,
 	gummyProgress,
+	progressAtVh,
 	rgbCss,
+	STORY_VH,
 	timeline,
 } from "./storyTimeline";
 
@@ -27,10 +29,10 @@ describe("scenes", () => {
 		expect(rgbCss(backgroundAt(0))).toBe(rgbCss(COLOURS.cream));
 	});
 	it("2 spin and settle: headline is gone before the caps lift; jars face front before opening", () => {
-		expect(timeline(0.15).hero).toBe(0);
-		expect(timeline(0.18).capLift).toBe(0);
-		expect(timeline(0.2).spin).toBe(0);
-		expect(timeline(0.2).settle).toBeCloseTo(1, 1);
+		expect(timeline(0.05).hero).toBe(0);
+		expect(timeline(0.03).capLift).toBe(0);
+		expect(timeline(0.08).spin).toBe(0);
+		expect(timeline(0.1).settle).toBeCloseTo(1, 1);
 	});
 	it("settle bounces: it overshoots 1 a little, then rests at 1", () => {
 		let max = 0;
@@ -43,7 +45,7 @@ describe("scenes", () => {
 		expect(easeOutBack(1)).toBeCloseTo(1, 5);
 	});
 	it("3 open: caps up, both sets of gummies out by the time the hero gummy starts", () => {
-		const t = timeline(0.34);
+		const t = timeline(0.22);
 		expect(t.capLift).toBe(1);
 		expect(t.greenOut).toBe(1);
 		expect(t.pinkOut).toBe(1);
@@ -81,12 +83,12 @@ describe("scenes", () => {
 		}
 	});
 	it("5 return: gummies and caps are back before the Numbers", () => {
-		const t = timeline(0.82);
+		const t = timeline(0.78);
 		expect(t.greenOut).toBe(0);
 		expect(t.pinkOut).toBe(0);
 		expect(t.capLift).toBe(0);
 		expect(t.focus).toBe(0);
-		expect(rgbCss(backgroundAt(0.82))).toBe(rgbCss(COLOURS.darkOlive));
+		expect(rgbCss(backgroundAt(0.78))).toBe(rgbCss(COLOURS.darkOlive));
 	});
 	it("6 Numbers: everything shows at the anchor, jars veiled, background word gone", () => {
 		const t = timeline(ANCHORS.numbers);
@@ -100,18 +102,55 @@ describe("scenes", () => {
 		expect(t.dark).toBe(1);
 	});
 	it("numbers appear in order: 5 mg, 30, with..., badges one after another", () => {
-		const t = timeline(0.92);
+		const t = timeline(0.87);
 		expect(t.five).toBeGreaterThanOrEqual(t.thirty);
 		expect(t.thirty).toBeGreaterThanOrEqual(t.with);
 		expect(t.badges[0]).toBeGreaterThanOrEqual(t.badges[1]);
 		expect(t.badges[1]).toBeGreaterThanOrEqual(t.badges[2]);
 	});
 	it("anchors land in the right scene", () => {
-		expect(ANCHORS.ingredients).toBeGreaterThan(0.32);
-		expect(ANCHORS.ingredients).toBeLessThan(0.52);
-		expect(ANCHORS.benefits).toBeGreaterThan(0.52);
-		expect(ANCHORS.benefits).toBeLessThan(0.72);
+		expect(ANCHORS.ingredients).toBeGreaterThan(0.28);
+		expect(ANCHORS.ingredients).toBeLessThan(0.44);
+		expect(ANCHORS.benefits).toBeGreaterThan(0.5);
+		expect(ANCHORS.benefits).toBeLessThan(0.66);
 		expect(ANCHORS.numbers).toBeLessThanOrEqual(1);
+	});
+});
+
+describe("retimed story (D-95)", () => {
+	it("caps are well on their way within the first 100vh of scrolling, on both heights", () => {
+		for (const h of [STORY_VH.desktop, STORY_VH.mobile]) {
+			const p = progressAtVh(100, h);
+			expect(timeline(p).capLift).toBeGreaterThan(0.5);
+		}
+	});
+	it("first motion of the caps comes within about 40vh", () => {
+		for (const h of [STORY_VH.desktop, STORY_VH.mobile]) {
+			expect(timeline(progressAtVh(40, h)).capLift).toBeGreaterThan(0);
+		}
+		expect(timeline(0.02).capLift).toBe(0);
+	});
+	it("no dead time: something moves in every 0.01 step up to the first hero gummy", () => {
+		const keys = [
+			"hero",
+			"settle",
+			"spin",
+			"capLift",
+			"greenOut",
+			"pinkOut",
+			"greenHero",
+			"dark",
+		] as const;
+		for (let i = 0; i < 28; i++) {
+			const a = timeline(i / 100);
+			const b = timeline((i + 1) / 100);
+			const moved = keys.some((k) => Math.abs(a[k] - b[k]) > 0.002);
+			expect(moved, `p ${i / 100}`).toBe(true);
+		}
+	});
+	it("the anchors sit inside the hold of their scene", () => {
+		expect(timeline(ANCHORS.ingredients).ingredients).toEqual([1, 1, 1, 1]);
+		expect(timeline(ANCHORS.benefits).benefits).toEqual([1, 1, 1, 1]);
 	});
 });
 
@@ -167,7 +206,7 @@ describe("timeline basics", () => {
 	});
 	it("cap wobble is small and zero when closed or fully open", () => {
 		expect(timeline(0).wobble).toBe(0);
-		expect(timeline(0.3).wobble).toBeCloseTo(0, 5);
+		expect(timeline(0.3).wobble).toBeCloseTo(0, 5); // fully open
 		for (let i = 0; i <= 1000; i++)
 			expect(Math.abs(timeline(i / 1000).wobble)).toBeLessThan(0.06);
 	});

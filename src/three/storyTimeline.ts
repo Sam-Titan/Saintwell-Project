@@ -1,15 +1,21 @@
 /**
- * Scroll story timeline, Phase 4R (D-79). Everything is a pure function of scroll progress p
- * (0..1), so scrolling back up plays it in reverse. The story is 900vh tall (800vh on phones).
+ * Scroll story timeline, Phase 4R (D-79, retimed by D-95). Everything is a pure function of scroll
+ * progress p (0..1), so scrolling back up plays it in reverse. The story is 800vh tall (700vh on
+ * phones), so p = 0.1 is about 70vh of scrolling.
  *
- *  0.00-0.08  1 hero (cream): green jar stands, pink jar lies, headline visible
- *  0.08-0.20  2 spin and settle: jars move down/closer, headline fades out, colour starts to shift
- *  0.18-0.34  3 open: caps unscrew, green gummies rise, pink gummies roll out
- *  0.32-0.52  4a Ingredients (olive): green hero gummy, 4 blocks
- *  0.52-0.72  4b Benefits (maroon): pink hero gummy, 4 blocks
- *  0.72-0.82  5 return: gummies back, caps close, maroon -> dark olive
- *  0.82-1.00  6 Numbers (dark olive): 5 mg, 30, with..., 3 badges
+ *  0.00-0.08  1/2 hero + small settle: headline fades out, jars face front
+ *  0.04-0.22  3 open: caps unscrew (first motion within ~30vh), green gummies rise, pink roll out
+ *  0.20-0.46  4a Ingredients (olive): green hero gummy, 4 blocks (hold 0.35-0.42)
+ *  0.44-0.68  4b Benefits (maroon): pink hero gummy, 4 blocks (hold 0.54-0.64)
+ *  0.66-0.78  5 return: gummies back, caps close, maroon -> dark olive
+ *  0.78-1.00  6 Numbers (dark olive): 5 mg, 30, with..., 3 badges
  */
+
+/** Story heights in vh (D-95). */
+export const STORY_VH = { desktop: 800, mobile: 700 } as const;
+
+/** Scroll progress after `vh` viewport heights of scrolling, for a story `height` vh tall. */
+export const progressAtVh = (vh: number, height: number) => vh / (height - 100);
 
 export const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 
@@ -52,9 +58,9 @@ const mix = (a: Rgb, b: Rgb, t: number): Rgb => [
 /** Page / stage background colour (0-255 floats) at progress p. Cream, olive, maroon, dark olive. */
 export function backgroundAt(p: number): Rgb {
 	const x = clamp01(p);
-	let c: Rgb = mix(COLOURS.cream, COLOURS.olive, smooth(0.12, 0.34, x));
-	c = mix(c, COLOURS.maroon, smooth(0.5, 0.58, x));
-	c = mix(c, COLOURS.darkOlive, smooth(0.72, 0.82, x));
+	let c: Rgb = mix(COLOURS.cream, COLOURS.olive, smooth(0.12, 0.24, x));
+	c = mix(c, COLOURS.maroon, smooth(0.44, 0.52, x));
+	c = mix(c, COLOURS.darkOlive, smooth(0.68, 0.78, x));
 	return c;
 }
 
@@ -63,9 +69,9 @@ export const rgbCss = (c: Rgb) =>
 
 /** In-page anchors: the progress where each scene sits fully in view (nav links scroll here). */
 export const ANCHORS = {
-	ingredients: 0.46,
-	benefits: 0.66,
-	numbers: 0.98,
+	ingredients: 0.38,
+	benefits: 0.6,
+	numbers: 0.97,
 } as const;
 
 export type Timeline = {
@@ -77,6 +83,8 @@ export type Timeline = {
 	spin: number;
 	/** 0 closed .. 1 cap fully lifted */
 	capLift: number;
+	/** 0 caps hover over their jars .. 1 caps tucked in the centre band behind the hero gummy (4a/4b, D-101) */
+	aside: number;
 	/** small cap wobble while it unscrews (radians-ish, signed) */
 	wobble: number;
 	/** 0 gummies inside .. 1 green gummies floating outside */
@@ -125,38 +133,39 @@ const stagger = (
 
 export function timeline(p: number): Timeline {
 	const x = clamp01(p);
-	const greenHero = pulse(0.32, 0.38, 0.52, 0.56, x);
-	const pinkHero = pulse(0.54, 0.6, 0.7, 0.74, x);
-	const capLift = pulse(0.18, 0.26, 0.76, 0.82, x);
+	const greenHero = pulse(0.2, 0.28, 0.42, 0.46, x);
+	const pinkHero = pulse(0.44, 0.52, 0.64, 0.68, x);
+	const capLift = pulse(0.04, 0.12, 0.7, 0.78, x);
 	return {
-		hero: clamp01(1 - smooth(0.08, 0.15, x)),
-		settle: easeOutBack((x - 0.08) / 0.12),
-		spin: clamp01(1 - smooth(0.14, 0.2, x)),
+		hero: clamp01(1 - smooth(0, 0.04, x)),
+		settle: easeOutBack(x / 0.07),
+		spin: clamp01(1 - smooth(0.02, 0.08, x)),
 		capLift,
+		aside: pulse(0.2, 0.28, 0.62, 0.7, x),
 		wobble:
 			Math.sin(capLift * Math.PI * 5) * 0.05 * Math.sin(capLift * Math.PI),
-		greenOut: pulse(0.2, 0.32, 0.72, 0.8, x),
-		pinkOut: pulse(0.22, 0.34, 0.72, 0.8, x),
+		greenOut: pulse(0.08, 0.2, 0.66, 0.74, x),
+		pinkOut: pulse(0.1, 0.22, 0.66, 0.74, x),
 		greenHero,
 		pinkHero,
 		focus: clamp01(greenHero + pinkHero),
-		dark: smooth(0.14, 0.3, x),
-		veil: smooth(0.8, 0.88, x),
-		word: 1 - smooth(0.8, 0.88, x),
-		eyebrowIngredients: pulse(0.34, 0.38, 0.5, 0.54, x),
-		eyebrowBenefits: pulse(0.54, 0.58, 0.7, 0.74, x),
-		marker: pulse(0.34, 0.38, 0.7, 0.74, x),
-		step: smooth(0.5, 0.56, x),
-		ingredients: stagger(0.35, 0.03, 0.02, 0.5, 0.54, x),
-		benefits: stagger(0.55, 0.03, 0.02, 0.7, 0.74, x),
-		glance: smooth(0.84, 0.88, x),
-		five: smooth(0.86, 0.9, x),
-		thirty: smooth(0.87, 0.91, x),
-		with: smooth(0.9, 0.93, x),
+		dark: smooth(0.12, 0.24, x),
+		veil: smooth(0.78, 0.84, x),
+		word: 1 - smooth(0.78, 0.84, x),
+		eyebrowIngredients: pulse(0.24, 0.28, 0.42, 0.46, x),
+		eyebrowBenefits: pulse(0.46, 0.5, 0.64, 0.68, x),
+		marker: pulse(0.24, 0.28, 0.64, 0.68, x),
+		step: smooth(0.42, 0.48, x),
+		ingredients: stagger(0.26, 0.03, 0.02, 0.42, 0.46, x),
+		benefits: stagger(0.48, 0.03, 0.02, 0.64, 0.68, x),
+		glance: smooth(0.78, 0.82, x),
+		five: smooth(0.8, 0.84, x),
+		thirty: smooth(0.81, 0.85, x),
+		with: smooth(0.85, 0.88, x),
 		badges: [
-			smooth(0.92, 0.95, x),
-			smooth(0.93, 0.96, x),
-			smooth(0.94, 0.97, x),
+			smooth(0.88, 0.91, x),
+			smooth(0.89, 0.92, x),
+			smooth(0.9, 0.93, x),
 		],
 	};
 }
