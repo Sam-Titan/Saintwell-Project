@@ -28,6 +28,14 @@ COLOURS = {
     "green": ((0x9B, 0xA5, 0x6B), (0.34, 0.42, 0.10)),
     "pink": ((0xD7, 0x9A, 0xA8), (0.62, 0.20, 0.30)),
 }
+# look variants: absorption density (depth of the thick centre), scatter, rim light power
+VARIANTS = {
+    "a": {"absorb": 20.0, "scatter": 1.5, "rim": 70, "rough": 0.12},
+    "b": {"absorb": 45.0, "scatter": 0.5, "rim": 110, "rough": 0.2},
+    "c": {"absorb": 8.0, "scatter": 4.0, "rim": 50, "rough": 0.08},
+}
+# world = scene colour, so the edges glow with it
+WORLD = {"green": (0x3E, 0x4A, 0x2F), "pink": (0x6A, 0x1F, 0x2B)}
 TILT_BASE = math.radians(20)
 TILT_ROCK = math.radians(16)
 WIDTH_M = 0.38  # widest silhouette of the gumdrop (jar units)
@@ -39,13 +47,15 @@ def srgb_to_linear(c):
     return c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4
 
 
-def jelly_material(name, rgb, deep):
+def jelly_material(name, rgb, deep, v):
     mat = bpy.data.materials.new(name)
     nt = mat.node_tree
     nt.nodes.clear()
     n = nt.nodes
     link = nt.links.new
-    base = tuple(srgb_to_linear(v) for v in rgb) + (1.0,)
+    lin = [srgb_to_linear(c) for c in rgb]
+    lum = 0.3 * lin[0] + 0.55 * lin[1] + 0.15 * lin[2]
+    base = tuple(max(0.0, lum + (c - lum) * 1.4) for c in lin) + (1.0,)  # saturated
 
     out = n.new("ShaderNodeOutputMaterial")
     mix = n.new("ShaderNodeMixShader")
@@ -135,6 +145,8 @@ def main():
     args = sys.argv[sys.argv.index("--") + 1 :]
     out_dir, frames, size, samples = args[0], int(args[1]), int(args[2]), int(args[3])
     which = args[4] if len(args) > 4 else "all"
+    variant = args[5] if len(args) > 5 else "a"
+    v = VARIANTS[variant]
     todo = list(range(frames)) if which == "all" else [int(v) for v in which.split(",")]
     os.makedirs(out_dir, exist_ok=True)
 
@@ -155,7 +167,7 @@ def main():
     scene.render.image_settings.file_format = "PNG"
     scene.render.image_settings.color_mode = "RGBA"
     scene.render.image_settings.color_depth = "8"
-    scene.view_settings.view_transform = "Standard"
+    scene.view_settings.view_transform = "AgX"
     scene.view_settings.look = "None"
 
     # soft white world: the light that shines through the jelly from behind
@@ -163,7 +175,7 @@ def main():
     world.use_nodes = True
     bg_node = world.node_tree.nodes["Background"]
     bg_node.inputs["Color"].default_value = (1, 1, 1, 1)
-    bg_node.inputs["Strength"].default_value = 0.9
+    bg_node.inputs["Strength"].default_value = 1.0
     scene.world = world
 
     # camera: orthographic, looks along +Y (the front of the web scene's +Z), level
@@ -177,21 +189,23 @@ def main():
     scene.camera = cam
 
     # key from upper left front, rim from behind right, small fill
-    add_area("key", (-0.9, -1.2, 1.1), (0, 0, 0), 55, 0.7, (1.0, 0.97, 0.92))
-    add_area("rim", (1.0, 1.1, 0.8), (0, 0, 0), 90, 0.5)
-    add_area("fill", (1.0, -1.4, 0.2), (0, 0, 0), 12, 1.0)
+    add_area("key", (-0.9, -1.2, 1.1), (0, 0, 0), 22, 0.9, (1.0, 0.97, 0.92))
+    rim = add_area("rim", (0.9, 1.4, 0.15), (0, 0, 0), v["rim"], 0.5)
+    add_area("fill", (1.0, -1.4, 0.2), (0, 0, 0), 6, 1.0)
 
     log = []
     t_all = time.time()
     for colour, (rgb, deep) in COLOURS.items():
-        mat = jelly_material(f"jelly_{colour}", rgb, deep)
+        mat = jelly_material(f"jelly_{colour}", rgb, deep, v)
+        wc = tuple(srgb_to_linear(c) for c in WORLD[colour]) + (1.0,)
+        bg_node.inputs["Color"].default_value = wc
         obj = bg.make(f"gummy_{colour}", 5, mat, uv=False)  # smooth, 20480 triangles
         obj.rotation_mode = "ZYX"  # spin about its own vertical axis first, then tilt towards the camera
         for k in todo:
             phi = 2 * math.pi * k / frames
             tilt = TILT_BASE + TILT_ROCK * math.sin(phi)
             obj.rotation_euler = (tilt, 0.0, phi)
-            path = os.path.join(out_dir, f"gummy-{colour}-{k:02d}.png")
+            path = os.path.join(out_dir, f"gummy-{colour}-{k:02d}{'' if which == 'all' else '-' + variant}.png")
             scene.render.filepath = path
             t0 = time.time()
             bpy.ops.render.render(write_still=True)

@@ -75,6 +75,19 @@ assets:
       cwebp -quiet -q 85 "$tmp/$colour-001.png" -o "public/images/jar-$colour-b.webp"
     done
 
+# Hero gummy turntable sprites (D-106): Blender Cycles (CPU, OIDN) -> PNG -> WebP with alpha in public/sprites/.
+# Slow (about half an hour for 2 x 24 frames): run it detached, see README. variant = a | b | c (look, see blender/render_gummy.py)
+sprites variant="a" frames="24" size="512" samples="128":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    rm -rf blender/out/sprites && mkdir -p blender/out/sprites public/sprites
+    {{blender}} -b --factory-startup --python blender/render_gummy.py -- blender/out/sprites {{frames}} {{size}} {{samples}} all {{variant}}
+    cat blender/out/sprites/render-times.txt | tail -1
+    for f in blender/out/sprites/gummy-*.png; do
+      cwebp -quiet -q 72 -alpha_q 85 -m 6 "$f" -o "public/sprites/$(basename "${f%.png}").webp"
+    done
+    echo "sprites: $(cat public/sprites/*.webp | wc -c) bytes in $(ls public/sprites | wc -l) files"
+
 # Blender scripts -> .glb -> gltf-transform (meshopt) -> gltfjsx components. Fails if models exceed 2 MB.
 models:
     #!/usr/bin/env bash

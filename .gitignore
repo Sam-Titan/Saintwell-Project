@@ -14,3 +14,4 @@ test-results
 
 # lighthouse (chrome-launcher under WSL) once made Windows-path temp dirs in the repo root
 /C:*
+__pycache__/
