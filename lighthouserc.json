@@ -3,7 +3,10 @@
 		"collect": {
 			"startServerCommand": "pnpm preview --port 4173",
 			"url": ["http://localhost:4173/"],
-			"numberOfRuns": 3
+			"numberOfRuns": 3,
+			"settings": {
+				"chromeFlags": "--user-data-dir=/tmp/lhci-profile"
+			}
 		},
 		"assert": {
 			"aggregationMethod": "median",

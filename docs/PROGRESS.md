@@ -12,6 +12,32 @@ Claude Code: add a new entry at the TOP at the end of every session. Keep it sho
 
 ## Session log
 
+### 2026-11-10 — Phase 4R fixes (Sam's GPU review, D-92 to D-102)
+**Done**
+- **Hero = poster + headline, no loader.** `LoaderPlate` and `LoadingScreen` deleted. The 3D lazy-loads at idle behind the poster and cross-fades in (350 ms) on the first real scroll (or when ready). The canvas stops rendering while the poster is up and unscrolled. `just poster` renders both posters from the real scene (`?poster=1`: frozen at p=0, no page text, max transmission quality; any machine with a GPU can run it). Both preloaded in `index.html` with media queries.
+- **Retimed, 800vh / 700vh.** Caps first move at about 28vh and are well open by 100vh; no dead steps (tested). Jars only sway now (+-0.25 rad), so labels always read. The hero view starts raised so the jars sit lower under the headline and settle up as they open.
+- **Layout.** Green stands left of centre; pink lies front-right and covers about 25 % of the green jar (tested through the real camera at 1.6, 16:9, 2.0). Mobile the same, scaled (frame widened so the pink cap is not clipped).
+- **Black background fixed.** The scene draws its own background (`backgroundAt(p)` each frame, all tiers) and the giant SAINTWELL word is a canvas-texture plane (no network). Found and fixed two side effects of the opaque canvas: contact shadows cleared to opaque black (clear alpha 0), and the composer left `autoClear` off when switched off (ghost trapezoid on the ground; now forced on).
+- **Effects.** Composer stays mounted, precompiled over 4 warm-up frames at idle, then `enabled=false` outside 4a/4b, with DOF and Bloom at 0. Bloom only catches the hero gummy's HDR rim (threshold 1.0); checked at cap lift on the high tier: caps do not bloom. A radial glow plane sits behind the hero gummy on all tiers.
+- **Gummies matte, sugar-dusted.** Roughness map baked in Blender, sparkle map, no clearcoat, faked translucency (dark core, lighter rim). Crowd gummies share the material (UVs added; second material in Blender so gltf-transform does not join the meshes; `--join false`). Models + textures 195 KB.
+- **Text columns.** In 4a/4b the caps tuck right behind the hero gummy and all crowd gummies float inside the centre band (unit tested). Hero floaters kept out of the headline and label rows (tested). The label line is on one line.
+- **Performance.** `just preview` added. ContactShadows 1024 / 512 px, blur 3.2, plane offset, redrawn only while things move. dpr cap 1.5. r3f-perf is a lazy dev-only import (not in the production build; checked). `?fps=1` own readout with min / avg per scene (`window.__fps`).
+- **Smoothing.** Critically damped spring (about 0.25 s), no scroll-speed limiting existed; text and 3D read the same smoothed value. Tested.
+- **Lighthouse.** `/C:*` in `.gitignore`, Chrome profile in `/tmp` through `lighthouserc.json`: a run created no new dirs. The 3 old dirs are still in the repo root (ignored by git); delete with `rm -rf ./C:*lighthouse.*`.
+- Tests: vitest 54, Playwright 25 pass (poster hero visible with no loader, cross-fade after first scroll, new anchors 0.38 / 0.60, etc.). `just check` passes. `just lighthouse` fallback path: Perf 92, A11y 100, BP 100, SEO 83 (Phase 5). Bundles (raw / gz): main 397 / 128 KB, HeroScene 166 / 54, three+drei 918 / 243, Fx 100 / 26.
+- Screenshots: `.playwright-mcp/phase4r-fix-{d,m}-{hero,4a,4b}.png` (low tier), `fix3-high-12.png`, `fix2-high-38.png` (high tier: DOF + Bloom, no black).
+
+**Not done / for Sam**
+- **Posters not committed yet** (`public/images/poster-desktop.webp` 29 KB, `poster-mobile.webp` 23 KB; PNGs in `blender/out/`). Please look; if the frosted jar looks grainy on your GPU, run `just poster` there. Until they are committed the hero `<img>` 404s.
+- **fps:** I cannot measure it (no GPU here). Please run `just preview`, open `/?fps=1`, scroll the whole story and send me the per-scene numbers (`window.__fps` in the console).
+- The poster matches the 3D framing at 16:9-ish and phone shapes; at other aspect ratios the 0.35 s cross-fade shifts slightly.
+- Low tier has no blur, the jars fade behind the hero gummy; text can sit over faded jars.
+
+**Next**
+- Sam: look at the posters, run `just preview` + `?fps=1`, approve and push. Then Phase 5.
+
+---
+
 ### 2026-11-10 — Phase 4R (redesign)
 **Done** (D-79 to D-91; SPEC, PHASES checklist, BACKLOG #13)
 - 7 scenes on one pure timeline (hero, settle, open, 4a green hero gummy on olive, 4b pink hero gummy on maroon, return, Numbers on `#2E3723`); `backgroundAt(p)` drives the colour layer and the pink jar's transmission background. Old moon, split night, cards removed.

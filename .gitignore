@@ -11,3 +11,6 @@ test-results
 .DS_Store
 .claude/settings.local.json
 .playwright-mcp
+
+# lighthouse (chrome-launcher under WSL) once made Windows-path temp dirs in the repo root
+/C:*
