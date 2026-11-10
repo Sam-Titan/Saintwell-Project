@@ -84,7 +84,7 @@ test("a small wheel scroll does not jump past the open state", async ({
 	await page.mouse.move(400, 400);
 	await page.mouse.wheel(0, 100);
 	await page.waitForTimeout(2000);
-	// 100px of a 500vh story is a few percent, never the whole opening
+	// 100px of a 900vh story is a few percent, never the whole opening
 	expect(await progress(page)).toBeLessThan(0.1);
 });
 
