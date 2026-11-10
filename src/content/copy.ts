@@ -17,6 +17,18 @@ export const copy = {
 		count: "30 Gummies",
 		category: "Nutraceutical",
 	},
+	ui: {
+		jarPicker: "Jar colour",
+		labelPicker: "Label",
+		jarOptions: { green: "Green jar", pink: "Pink jar" },
+		labelOptions: { a: "Label A", b: "Label B" },
+		loading: "Loading the jar",
+		canvasDescription: (colour: string, label: string) =>
+			`3D view of the SAINTWELL Melatonin Gummies jar, ${colour}, ${label}, slowly turning`,
+		fallbackAlt: (colour: string, label: string) =>
+			`SAINTWELL Melatonin Gummies, ${colour}, ${label}`,
+		logoAlt: "SAINTWELL",
+	},
 	badges: ["Vegan", "Gluten Free", "Non GMO"],
 	benefits: ["Calm Mind", "Restful Sleep", "Wake Refreshed"],
 	ingredients: [

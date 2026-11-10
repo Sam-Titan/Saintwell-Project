@@ -63,3 +63,32 @@
 	--font-lora: "Lora", serif;
 	--font-inter: "Inter", sans-serif;
 }
+
+/* Theme variables are set from src/theme/tokens.ts by JarProvider; these are the green defaults
+   so the first paint is already themed. */
+:root {
+	--night: #3e4a2f;
+	--accent: #9ba56b;
+	--font-body: "Poppins", sans-serif;
+	--font-display: "Lora", serif;
+}
+
+html {
+	background: var(--color-cream);
+}
+
+body {
+	margin: 0;
+	background: var(--color-cream);
+	color: var(--night);
+	font-family: var(--font-body);
+}
+
+h1 {
+	font-family: var(--font-display);
+}
+
+:focus-visible {
+	outline: 3px solid var(--night);
+	outline-offset: 3px;
+}
