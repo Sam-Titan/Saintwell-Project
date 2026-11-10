@@ -47,11 +47,7 @@ export function HeroGummy({
 	state: HeroState;
 }) {
 	const { nodes } = useGLTF(asset("models/gummy.glb")) as unknown as GummyGLTF;
-	const material = useHeroMaterial(
-		colour,
-		jarColours[colour].gummy,
-		tier === "high",
-	);
+	const material = useHeroMaterial(colour, jarColours[colour].gummy);
 	const group = useRef<THREE.Group>(null);
 	const body = useRef<THREE.Mesh>(null);
 	const halo = useRef<THREE.SpriteMaterial>(null);
@@ -108,7 +104,6 @@ export function HeroGummy({
 		b.scale.setScalar(sc);
 		const time = s.clock.elapsedTime;
 		b.rotation.set(0.35 + Math.sin(time * 0.4) * 0.18, time * 0.28, 0.1);
-		material.opacity = 1;
 		// shared with depth of field and the DOM
 		state.target.copy(g.position);
 		state.amount = Math.max(state.amount, t);

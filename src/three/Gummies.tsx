@@ -141,7 +141,6 @@ export function Gummies({
 			const heroT = lie ? tl.pinkHero : tl.greenHero;
 			const base = nodes.Gummy.scale.x; // the exported mesh is quantised: its node carries the real scale
 			const keep = 1 - shrink * tl.focus;
-			material.opacity = 1 - 0.45 * tl.focus;
 			gummies.forEach((g, i) => {
 				const t = gummyProgress(out, i, gummies.length);
 				const neck = lie ? PINK_MOUTH : NECK;
@@ -166,7 +165,7 @@ export function Gummies({
 			});
 			m.instanceMatrix.needsUpdate = true;
 		},
-		[gummies, nodes, tmp, lie, material, shrink],
+		[gummies, nodes, tmp, lie, shrink],
 	);
 
 	useLayoutEffect(() => {
@@ -215,7 +214,6 @@ export function Ambient({
 		const tl = timelineAt(progress.get());
 		const t = state.clock.elapsedTime;
 		const base = nodes.GummyHero.scale.x;
-		material.opacity = 1 - 0.45 * tl.focus;
 		spots.forEach((sp, i) => {
 			tmp.p.set(sp[0], sp[1] + Math.sin(t * 0.8 + i * 2.1) * 0.12, sp[2]);
 			tmp.e.set(0.6 + i + t * 0.2, 1.1 * i + t * 0.15, 0.3 * i);

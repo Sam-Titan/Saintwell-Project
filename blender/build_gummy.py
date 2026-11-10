@@ -1,6 +1,6 @@
 """Build the gummies (Phase 4R, D-83) and bake the sugar surface textures.
 
-Two meshes in one .glb, same shape and size (jar units: body radius = 1.0, gummy ~0.36 wide, ~0.2 thick):
+Two meshes in one .glb, same gumdrop shape and size (jar units: body radius = 1.0, gummy ~0.36 wide, ~0.2 tall, flat base down):
   Gummy      low poly (320 triangles): drawn many times with instancing (the crowd)
   GummyHero  detailed (5120 triangles): the one big gummy in the close-up scenes
 
@@ -22,20 +22,26 @@ import bpy
 import numpy as np
 
 SAGE = (0x9B / 255, 0xA5 / 255, 0x6B / 255, 1.0)
-HALF = (0.18, 0.17, 0.1)  # half sizes x, y, z
-SQUARENESS = 2.4  # 2 = ellipsoid; higher = squarer, pillow-like
+RADIUS = 0.18  # half width of the gumdrop
+DOME = 0.15  # height of the domed top above the widest ring
+BASE = 0.05  # depth of the flat-based part below the widest ring
+FLATNESS = 0.45  # < 1 pushes the underside towards a flat plate with a rounded edge
 
 
 def shape(bm):
-    """Squarish pillow, slightly lopsided like a real gumdrop. Fixed numbers: same shape every build."""
-    k = 2.0 / SQUARENESS
+    """Gumdrop (D-107): round in plan, flat base, domed top. Fixed numbers: same shape every build.
+    Centred on its bounding box so it rotates about its middle."""
+    mid = (DOME - BASE) / 2
     for v in bm.verts:
         p = v.co.copy()
         ang = math.atan2(p.y, p.x)
-        wob = 1.0 + 0.05 * math.sin(3 * ang + 0.7) + 0.03 * math.sin(2 * ang + 2.1)
-        v.co.x = HALF[0] * wob * (abs(p.x) ** k) * (1 if p.x >= 0 else -1)
-        v.co.y = HALF[1] * wob * (abs(p.y) ** k) * (1 if p.y >= 0 else -1)
-        v.co.z = HALF[2] * (abs(p.z) ** k) * (1 if p.z >= 0 else -1)
+        wob = 1.0 + 0.04 * math.sin(3 * ang + 0.7) + 0.025 * math.sin(2 * ang + 2.1)
+        v.co.x = RADIUS * wob * p.x
+        v.co.y = RADIUS * wob * p.y
+        if p.z >= 0:
+            v.co.z = DOME * p.z - mid
+        else:
+            v.co.z = -BASE * (-p.z) ** FLATNESS - mid
 
 
 def make(name, subdivisions, material, uv):
@@ -90,7 +96,7 @@ def bake_textures(folder):
     write_image("sugar-normal", os.path.join(folder, "sugar-normal.png"), rgb, n)
 
     # sparkles: sparse bright dots on black (the colour map whitens the gummy colour there)
-    sp = np.clip(bumps(n, 260, 3.0) * 1.8, 0.0, 1.0)
+    sp = np.clip(bumps(n, 140, 2.8) * 1.8, 0.0, 1.0)  # sparse (D-107)
     write_image("sugar-specks", os.path.join(folder, "sugar-specks.png"), np.stack([sp] * 3, axis=-1), n)
 
     # roughness (G channel): matte everywhere, a little smoother on crystal tops, glints at the sparkles
@@ -141,4 +147,5 @@ def main():
     print(f"gummy exported to {out}")
 
 
-main()
+if __name__ == "__main__":
+    main()

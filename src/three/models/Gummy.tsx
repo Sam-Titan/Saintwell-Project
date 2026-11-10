@@ -27,15 +27,15 @@ export function Gummy(props: React.JSX.IntrinsicElements["group"]) {
 				name="Gummy"
 				geometry={nodes.Gummy.geometry}
 				material={materials.gummy_crowd}
-				position={[0.005, 0, 0.005]}
-				scale={0.185}
+				position={[0.005, 0, 0.006]}
+				scale={0.184}
 			/>
 			<mesh
 				name="GummyHero"
 				geometry={nodes.GummyHero.geometry}
 				material={materials.gummy_crowd}
-				position={[0.005, 0, 0.005]}
-				scale={0.186}
+				position={[0.004, 0, 0.005]}
+				scale={0.185}
 			/>
 		</group>
 	);
