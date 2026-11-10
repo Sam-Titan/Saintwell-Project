@@ -76,15 +76,21 @@ assets:
     done
 
 # Hero gummy turntable sprites (D-106): Blender Cycles (CPU, OIDN) -> PNG -> WebP with alpha in public/sprites/.
-# Slow (about half an hour for 2 x 24 frames): run it detached, see README. variant = a | b | c (look, see blender/render_gummy.py)
-sprites variant="a" frames="24" size="512" samples="128":
+# Slow (about 30 s per frame): `which` = all | 0-5 | 0,6 renders a batch; existing frames are skipped, so it can be run in pieces.
+# variant = b (approved look); colour = green | pink | empty for both. Then `just sprites-webp`.
+sprites variant="b" frames="24" size="512" samples="128" which="all" colour="":
     #!/usr/bin/env bash
     set -euo pipefail
-    rm -rf blender/out/sprites && mkdir -p blender/out/sprites public/sprites
-    {{blender}} -b --factory-startup --python blender/render_gummy.py -- blender/out/sprites {{frames}} {{size}} {{samples}} all {{variant}}
-    cat blender/out/sprites/render-times.txt | tail -1
+    mkdir -p blender/out/sprites
+    {{blender}} -b --factory-startup --python blender/render_gummy.py -- blender/out/sprites {{frames}} {{size}} {{samples}} {{which}} {{variant}} {{colour}}
+
+# Convert the rendered sprite PNGs to WebP with alpha (public/sprites/) and print the total size
+sprites-webp:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p public/sprites
     for f in blender/out/sprites/gummy-*.png; do
-      cwebp -quiet -q 72 -alpha_q 85 -m 6 "$f" -o "public/sprites/$(basename "${f%.png}").webp"
+      cwebp -quiet -q 88 -alpha_q 95 -m 6 "$f" -o "public/sprites/$(basename "${f%.png}").webp"
     done
     echo "sprites: $(cat public/sprites/*.webp | wc -c) bytes in $(ls public/sprites | wc -l) files"
 

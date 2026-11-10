@@ -18,8 +18,7 @@ One-page brand site with a 3D Melatonin Gummies jar.
 - `just check` — Biome + TypeScript
 - `just test` — vitest + Playwright
 - `just assets` — export brand images from the PDF
-- `just sprites [variant]` — hero gummy turntable sprites (Blender Cycles, about 30 min). Run it detached so it cannot be killed:
-  `export BLENDER=~/blender-5.2.3/blender; nohup just sprites a > blender/out/sprites.log 2>&1 &` then `tail -f blender/out/sprites.log`
+- `just sprites [variant] [frames] [size] [samples] [which] [colour]` — hero gummy turntable sprites (Blender Cycles, ~30 s a frame). Resume-safe: `just sprites b 24 512 128 0-5 green` renders a batch, existing frames are skipped. Then `just sprites-webp`.
 - `just models` — Blender → .glb → compress → React components (needs `BLENDER`)
 - `just lighthouse` — local Lighthouse check
 

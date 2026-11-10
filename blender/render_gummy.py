@@ -8,8 +8,9 @@ cycle per turn, so the loop is seamless and the dome / sugar keep catching the l
 tilt 20 deg: the real-time hero gummy takes off in exactly that pose.
 
 Run headless (see `just sprites`):
-  blender -b --factory-startup --python blender/render_gummy.py -- <out dir> <frames> <size px> <samples> [frame list]
-frame list: "all" (default) or e.g. "0,6" for a quick look.
+  blender -b --factory-startup --python blender/render_gummy.py -- <out dir> <frames> <size px> <samples> [which] [variant] [colour]
+which: "all" (default), a list "0,6" or a range "0-5". Frames whose PNG already exists are skipped (resume-safe).
+variant: a | b | c. colour: green | pink (default: both). Extra word "grey" = diagnostic material (names get a suffix).
 """
 
 import math
@@ -167,7 +168,14 @@ def main():
     variant = args[5] if len(args) > 5 else "a"
     grey = len(args) > 6 and args[6] == "grey"  # diagnostic: plain grey diffuse, shows geometry only
     v = VARIANTS[variant]
-    todo = list(range(frames)) if which == "all" else [int(v) for v in which.split(",")]
+    if which == "all":
+        todo = list(range(frames))
+    elif "-" in which:
+        lo, hi = which.split("-")
+        todo = list(range(int(lo), int(hi) + 1))
+    else:
+        todo = [int(v) for v in which.split(",")]
+    only = [a for a in args[6:] if a in ("green", "pink")]
     os.makedirs(out_dir, exist_ok=True)
 
     bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -231,6 +239,8 @@ def main():
     log = []
     t_all = time.time()
     for colour, (rgb, deep) in COLOURS.items():
+        if only and colour not in only:
+            continue
         mat = grey_material() if grey else jelly_material(f"jelly_{colour}", rgb, deep, v, 0.5 if colour == "pink" else 1.0)
         wc = tuple(srgb_to_linear(c) for c in WORLD[colour]) + (1.0,)
         glow = [srgb_to_linear(c) for c in rgb]
@@ -241,7 +251,10 @@ def main():
             phi = 2 * math.pi * k / frames
             tilt = TILT_BASE + TILT_ROCK * math.sin(phi)
             obj.rotation_euler = (tilt, 0.0, phi)
-            path = os.path.join(out_dir, f"gummy-{colour}-{k:02d}{'' if which == 'all' else '-' + variant}.png")
+            path = os.path.join(out_dir, f"gummy-{colour}-{k:02d}{'-' + variant if grey else ''}.png")
+            if os.path.exists(path):
+                print(f"{colour} {k:02d} exists, skipped", flush=True)
+                continue
             scene.render.filepath = path
             t0 = time.time()
             bpy.ops.render.render(write_still=True)
@@ -250,7 +263,7 @@ def main():
         bpy.data.objects.remove(obj)
     total = f"total {time.time() - t_all:.1f}s for {len(log)} frames"
     print(total)
-    with open(os.path.join(out_dir, "render-times.txt"), "w") as f:
+    with open(os.path.join(out_dir, "render-times.txt"), "a") as f:
         f.write("\n".join(log + [total]) + "\n")
 
 
