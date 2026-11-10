@@ -1,6 +1,7 @@
 import { Menu, X } from "lucide-react";
 import { motion, useReducedMotion, useTransform } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { asset } from "../assetUrl";
 import { copy } from "../content/copy";
 import { useJar } from "../theme/JarContext";
 import { timeline } from "../three/storyTimeline";
@@ -88,10 +89,10 @@ export default function Header({ fixed }: { fixed: boolean }) {
 					<picture>
 						<source
 							media="(min-width: 768px)"
-							srcSet="/images/logo-green-wide.svg"
+							srcSet={asset("images/logo-green-wide.svg")}
 						/>
 						<img
-							src="/images/logo-stacked-green-light.svg"
+							src={asset("images/logo-stacked-green-light.svg")}
 							alt=""
 							className="h-14 w-auto md:h-10"
 						/>
@@ -105,10 +106,10 @@ export default function Header({ fixed }: { fixed: boolean }) {
 					<picture>
 						<source
 							media="(min-width: 768px)"
-							srcSet="/images/logo-green-wide-dark.svg"
+							srcSet={asset("images/logo-green-wide-dark.svg")}
 						/>
 						<img
-							src="/images/logo-stacked-green-dark.svg"
+							src={asset("images/logo-stacked-green-dark.svg")}
 							alt=""
 							className="h-14 w-auto md:h-10"
 						/>

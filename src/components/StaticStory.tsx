@@ -1,3 +1,4 @@
+import { asset } from "../assetUrl";
 import { copy } from "../content/copy";
 import Numbers from "./Numbers";
 import SceneBlocks from "./SceneBlocks";
@@ -32,12 +33,12 @@ export default function StaticStory() {
 				</div>
 				<div className="relative mx-auto mt-6 h-[22rem] w-full max-w-xl sm:h-[26rem]">
 					<img
-						src="/images/jar-green-a.webp"
+						src={asset("images/jar-green-a.webp")}
 						alt={copy.ui.fallbackAlt.green}
 						className="absolute top-0 left-[8%] h-[85%] w-auto mix-blend-multiply"
 					/>
 					<img
-						src="/images/jar-pink-a.webp"
+						src={asset("images/jar-pink-a.webp")}
 						alt={copy.ui.fallbackAlt.pink}
 						className="absolute right-[2%] bottom-[2%] h-[62%] w-auto rotate-90 mix-blend-multiply"
 					/>

@@ -1,3 +1,4 @@
+import { asset } from "../assetUrl";
 import type { JarColour, JarLabel } from "../theme/tokens";
 import { themes } from "../theme/tokens";
 
@@ -19,5 +20,5 @@ export function labelUrl(
 	{ colour, label }: Look,
 	size: 1024 | 2048 = 2048,
 ): string {
-	return `/textures/labels/${colour}-${label}-${size}.webp`;
+	return asset(`textures/labels/${colour}-${label}-${size}.webp`);
 }

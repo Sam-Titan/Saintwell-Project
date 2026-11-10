@@ -16,6 +16,7 @@ import { timelineAt } from "./sceneTime";
 /** How far the cap rises when the jar is fully open (jar units). */
 const CAP_LIFT = 1.3;
 
+import { asset } from "../assetUrl";
 import { Jar } from "./models/Jar";
 
 type Props = {
@@ -59,7 +60,7 @@ export function LabeledJar({
 		label: THREE.MeshStandardMaterial;
 		band: { radius: number; height: number };
 	} | null>(null);
-	const { nodes } = useGLTF("/models/jar.glb") as unknown as {
+	const { nodes } = useGLTF(asset("models/jar.glb")) as unknown as {
 		nodes: { Body: THREE.Mesh };
 	};
 	const cap = useRef<{

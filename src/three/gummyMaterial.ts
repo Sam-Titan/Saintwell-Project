@@ -1,12 +1,13 @@
 import { useTexture } from "@react-three/drei";
 import { useEffect, useMemo } from "react";
 import * as THREE from "three";
+import { asset } from "../assetUrl";
 import type { JarColour } from "../theme/tokens";
 
 const TEXTURES = [
-	"/textures/gummy/sugar-normal.webp",
-	"/textures/gummy/sugar-specks.webp",
-	"/textures/gummy/sugar-rough.webp",
+	asset("textures/gummy/sugar-normal.webp"),
+	asset("textures/gummy/sugar-specks.webp"),
+	asset("textures/gummy/sugar-rough.webp"),
 ];
 
 /** Pale tints for the rim (lighter versions of the gummy colours, not new brand colours). */

@@ -33,7 +33,7 @@ Owner: Sam. Client: SAINTWELL. Market: India.
 - 3D: three, @types/three, @react-three/fiber, @react-three/drei, @react-three/postprocessing, r3f-perf (dev only), Blender (pinned LTS, headless), @gltf-transform/cli, gltfjsx
 - Assets: poppler-utils (pdftoppm, pdftocairo, pdfimages), webp (cwebp)
 - Quality: Biome, vitest, Playwright, @playwright/mcp, @lhci/cli, GitHub Actions, Dependabot
-- Hosting: Netlify (Phase 7 only)
+- Hosting: Netlify (Phase 7 only); GitHub Pages as interim host (D-103)
 
 ### Not allowed in V1
 

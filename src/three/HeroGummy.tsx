@@ -3,6 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import type { MotionValue } from "motion/react";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
+import { asset } from "../assetUrl";
 import type { Tier } from "../hooks/useDeviceTier";
 import type { JarColour } from "../theme/tokens";
 import {
@@ -45,7 +46,7 @@ export function HeroGummy({
 	progress: MotionValue<number>;
 	state: HeroState;
 }) {
-	const { nodes } = useGLTF("/models/gummy.glb") as unknown as GummyGLTF;
+	const { nodes } = useGLTF(asset("models/gummy.glb")) as unknown as GummyGLTF;
 	const material = useHeroMaterial(
 		colour,
 		jarColours[colour].gummy,

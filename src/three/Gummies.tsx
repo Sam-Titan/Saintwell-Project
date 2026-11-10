@@ -3,6 +3,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import type { MotionValue } from "motion/react";
 import { useCallback, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
+import { asset } from "../assetUrl";
 import type { JarColour } from "../theme/tokens";
 import { useGummyMaterial } from "./gummyMaterial";
 import { jarColours } from "./looks";
@@ -108,7 +109,7 @@ export function Gummies({
 	/** low tier: share the crowd shrinks while a hero gummy has the stage */
 	shrink?: number;
 }) {
-	const { nodes } = useGLTF("/models/gummy.glb") as unknown as GummyGLTF;
+	const { nodes } = useGLTF(asset("models/gummy.glb")) as unknown as GummyGLTF;
 	const mesh = useRef<THREE.InstancedMesh>(null);
 	const invalidate = useThree((s) => s.invalidate);
 	const lie = colour === "pink";
@@ -195,7 +196,7 @@ export function Ambient({
 	spots: readonly (readonly [number, number, number, number])[];
 	progress: MotionValue<number>;
 }) {
-	const { nodes } = useGLTF("/models/gummy.glb") as unknown as GummyGLTF;
+	const { nodes } = useGLTF(asset("models/gummy.glb")) as unknown as GummyGLTF;
 	const mesh = useRef<THREE.InstancedMesh>(null);
 	const material = useGummyMaterial(colour, jarColours[colour].gummy);
 	const tmp = useMemo(

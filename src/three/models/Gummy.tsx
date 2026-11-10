@@ -19,7 +19,7 @@ type GLTFResult = {
 
 export function Gummy(props: React.JSX.IntrinsicElements["group"]) {
 	const { nodes, materials } = useGLTF(
-		"/models/gummy.glb",
+		`${import.meta.env.BASE_URL}models/gummy.glb`,
 	) as unknown as GLTFResult;
 	return (
 		<group {...props} dispose={null}>
@@ -41,4 +41,4 @@ export function Gummy(props: React.JSX.IntrinsicElements["group"]) {
 	);
 }
 
-useGLTF.preload("/models/gummy.glb");
+useGLTF.preload(`${import.meta.env.BASE_URL}models/gummy.glb`);

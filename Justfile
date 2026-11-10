@@ -87,7 +87,7 @@ models:
       (cd public/models && pnpm exec gltfjsx "$m.glb" --types --keepnames -o "../../src/three/models/$name.tsx" >/dev/null)
       # gltfjsx output fixes: component name, public path, React 19 JSX types, drop three-stdlib GLTF type
       sed -i -E \
-        -e "s|useGLTF(.preload)?\('[^']*/$m\.glb'|useGLTF\1('/models/$m.glb'|" \
+        -e "s|useGLTF(.preload)?\('[^']*/$m\.glb'|useGLTF\1(import.meta.env.BASE_URL + 'models/$m.glb'|" \
         -e "s|export function Model|export function $name|" \
         -e "s|JSX\.IntrinsicElements|React.JSX.IntrinsicElements|" \
         -e "/animations: GLTFAction/d" \

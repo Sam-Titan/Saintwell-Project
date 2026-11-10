@@ -13,6 +13,7 @@ import {
 	useRef,
 	useState,
 } from "react";
+import { asset } from "../assetUrl";
 import { copy } from "../content/copy";
 import { tierSettings, useDeviceTier } from "../hooks/useDeviceTier";
 import { useJar } from "../theme/JarContext";
@@ -124,10 +125,10 @@ export default function Story() {
 						>
 							<source
 								media="(max-width: 639px)"
-								srcSet="/images/poster-mobile.webp"
+								srcSet={asset("images/poster-mobile.webp")}
 							/>
 							<img
-								src="/images/poster-desktop.webp"
+								src={asset("images/poster-desktop.webp")}
 								alt={copy.ui.canvasDescription}
 								fetchPriority="high"
 								className="h-full w-full object-cover"
