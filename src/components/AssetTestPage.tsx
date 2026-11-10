@@ -2,6 +2,7 @@
 import { copy } from "../content/copy";
 import { useJar } from "../theme/JarContext";
 import { themes } from "../theme/tokens";
+import JarLookViewer from "./JarLookViewer";
 
 const labels = ["green-a", "green-b", "pink-a", "pink-b"] as const;
 const jars = ["green-a", "green-b", "pink-a", "pink-b"] as const;
@@ -60,6 +61,14 @@ export default function AssetTestPage() {
 				Phase 1 asset test page. Jar state: {colour} + label {label}. Theme
 				night colour: {themes[colour].night}.
 			</p>
+
+			<Section title="3D jar looks (Phase 2, temporary)">
+				<p className="mb-2 text-sm">
+					Columns: green A, green B, pink A, pink B. Top row front, bottom row
+					back. Bottom: gummy instances (green, pink).
+				</p>
+				<JarLookViewer />
+			</Section>
 
 			<Section title="Logos">
 				<div className="grid gap-4 sm:grid-cols-2">
