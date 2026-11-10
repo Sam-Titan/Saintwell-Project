@@ -1,7 +1,15 @@
 {
-	"attribution": { "commit": "", "pr": "" },
 	"includeCoAuthoredBy": false,
+	"attribution": {
+		"commit": "",
+		"pr": ""
+	},
 	"permissions": {
-		"deny": ["Bash(git push:*)"]
+		"deny": [
+			"Bash(git push:*)",
+			"Bash(git commit --no-verify:*)",
+			"Read(./.env)",
+			"Read(./.env.*)"
+		]
 	}
 }
