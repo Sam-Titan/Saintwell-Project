@@ -12,11 +12,23 @@ Claude Code: add a new entry at the TOP at the end of every session. Keep it sho
 
 ## Session log
 
+### 2026-11-10 — Phase 1 fixes
+**Done**
+- Stacked logo: cleaned source committed as `brand/logo-stacked.svg`; `just assets` recolours it into `logo-stacked-{green,pink}-{light,dark}.svg` (D-40). No more PDF line numbers.
+- Test page shows all 4 (light on cream, dark on olive / maroon). Screenshot: `.playwright-mcp/phase1-logos-v2.png`.
+- OFL licences confirmed in `public/fonts/`: OFL-poppins.txt, OFL-lora.txt, OFL-inter.txt.
+- `just check` and `just test` pass.
+
+**Next**
+- Sam: check exports, approve, push. Then Phase 2.
+
+---
+
 ### 2026-11-10 — Phase 1
 **Done**
 - `just assets` (poppler + cwebp) exports everything from the PDF. Crop boxes refined from pixel edges, not stretched.
 - Labels (WebP, 2048 / 1024 wide): green-a 2048×772 / 1024×386; green-b 2048×699 / 1024×349; pink-a 2048×745 / 1024×372; pink-b 2048×614 / 1024×307. Total 0.5 MB.
-- Logos (SVG, no background): logo-green-wide, logo-pink-wide, logo-stacked. Stacked logo is rebuilt from the visible paths only: Canva hid the rest under olive rectangles and the jar photo. Its line numbers are fixed to this PDF.
+- Logos (SVG, no background): logo-green-wide, logo-pink-wide, logo-stacked. Stacked logo: see Phase 1 fixes.
 - Fallback jars (original embedded images, WebP, 820×1229): jar-green-a/b, jar-pink-a/b.
 - Fonts in `public/fonts/` with OFL licences: Poppins 400/500/700, Lora 700/700 italic, Inter (one variable file, 400–700). Latin subset, from Google Fonts' gstatic URLs.
 - `globals.css` (@font-face + colour/font tokens), `theme/tokens.ts`, `theme/JarContext.tsx` (default green + A), `content/copy.ts` (label text, rest `[PLACEHOLDER]`).

@@ -6,6 +6,21 @@ import { themes } from "../theme/tokens";
 const labels = ["green-a", "green-b", "pink-a", "pink-b"] as const;
 const jars = ["green-a", "green-b", "pink-a", "pink-b"] as const;
 
+const stacked = [
+	{
+		name: "green-light",
+		bg: "bg-cream outline outline-olive/20",
+		text: "text-olive",
+	},
+	{
+		name: "pink-light",
+		bg: "bg-cream outline outline-olive/20",
+		text: "text-olive",
+	},
+	{ name: "green-dark", bg: "bg-olive", text: "text-white" },
+	{ name: "pink-dark", bg: "bg-maroon", text: "text-white" },
+] as const;
+
 const swatches = [
 	["Dark olive", "#3e4a2f"],
 	["Sage", "#9ba56b"],
@@ -47,7 +62,7 @@ export default function AssetTestPage() {
 			</p>
 
 			<Section title="Logos">
-				<div className="grid gap-4 sm:grid-cols-3">
+				<div className="grid gap-4 sm:grid-cols-2">
 					<div className="rounded bg-cream p-4 outline outline-olive/20">
 						<img
 							src="/images/logo-green-wide.svg"
@@ -62,14 +77,18 @@ export default function AssetTestPage() {
 						/>
 						<p className="mt-2 text-sm">Pink wide</p>
 					</div>
-					<div className="rounded bg-olive p-4">
-						<img
-							className="mx-auto h-40"
-							src="/images/logo-stacked.svg"
-							alt="SaintWell logo, stacked"
-						/>
-						<p className="mt-2 text-sm text-white">Stacked (on olive)</p>
-					</div>
+				</div>
+				<div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+					{stacked.map(({ name, bg, text }) => (
+						<div key={name} className={`rounded p-4 ${bg}`}>
+							<img
+								className="mx-auto h-32"
+								src={`/images/logo-stacked-${name}.svg`}
+								alt={`SaintWell logo, stacked, ${name}`}
+							/>
+							<p className={`mt-2 text-sm ${text}`}>Stacked {name}</p>
+						</div>
+					))}
 				</div>
 			</Section>
 

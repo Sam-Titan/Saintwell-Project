@@ -41,9 +41,11 @@ assets:
       pdftocairo -svg -f "$page" -l "$page" "$pdf" "$tmp/$name.svg"
       sed -E -e '/^<rect x="-144"/d' -e "s|^<svg (.*)width=\"[^\"]*\" height=\"[^\"]*\" viewBox=\"[^\"]*\">|<svg \1width=\"$w\" height=\"$h\" viewBox=\"$x $y $w $h\">|" "$tmp/$name.svg" > "public/images/$name.svg"
     done
-    # stacked logo (page 9): keep only the visible paths (Canva hides the rest under olive rectangles + the jar photo)
-    pdftocairo -svg -f 9 -l 9 "$pdf" "$tmp/p9.svg"
-    { echo '<svg xmlns="http://www.w3.org/2000/svg" width="453" height="369" viewBox="179 190 453 369">'; sed -n '3,9p;30,35p;54p;57,66p;82,89p;96p' "$tmp/p9.svg"; } > public/images/logo-stacked.svg
+    # stacked logo: recolour brand/logo-stacked.svg (cleaned source, white Saint + sage Well) into 4 versions
+    for spec in "green-light 3E4A2F 9BA56B" "green-dark FFFFFF 9BA56B" "pink-light 6A1F2B D79AA8" "pink-dark FFFFFF D79AA8"; do
+      read -r name saint well <<<"$spec"
+      sed -E -e "s/fill=\"rgb\(100%, 100%, 100%\)\"/fill=\"#$saint\"/" -e "s/fill=\"rgb\(60\.778809%, 64\.709473%, 41\.958618%\)\"/fill=\"#$well\"/" brand/logo-stacked.svg > "public/images/logo-stacked-$name.svg"
+    done
     # fallback jars: original embedded images from pages 4 (green) and 8 (pink), A then B
     for spec in "green 4" "pink 8"; do
       read -r colour page <<<"$spec"
