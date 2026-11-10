@@ -12,6 +12,22 @@ Claude Code: add a new entry at the TOP at the end of every session. Keep it sho
 
 ## Session log
 
+### 2026-11-10 — GitHub Pages preview (D-103 to D-105)
+**Done**
+- Site works at any base path: `asset()` / `BASE_URL` for every `public/` URL, Vite `base` from `BASE_PATH` (D-103). Checked under `/Saintwell-Project/`: loads, canvas renders, no failed requests except the favicon (Phase 5).
+- `pages.yml` is **manual only** (`workflow_dispatch`, D-104). Run it from the Actions tab.
+- `noindex, nofollow` meta only in the Pages preview build (`NOINDEX=1` in the workflow, Vite plugin, D-105). Default build has none (checked); the Phase 7 Netlify build must not set `NOINDEX`.
+- Hero posters committed. Stray text in `docs/PHASE-4-BRIEF.md` restored (Sam's OK).
+- `just check`, vitest 54, Playwright 25 pass.
+
+**Why the first Pages page was white:** Pages was serving the repo source (branch deploy) and `origin/main` had none of this work.
+
+**Next (Sam)**
+- Settings -> Pages -> Source = GitHub Actions; push; run "Deploy to GitHub Pages" from the Actions tab; open `https://sam-titan.github.io/Saintwell-Project/`.
+- Still open from the fixes: `just preview` + `/?fps=1` numbers, approve Phase 4R.
+
+---
+
 ### 2026-11-10 — Phase 4R fixes (Sam's GPU review, D-92 to D-102)
 **Done**
 - **Hero = poster + headline, no loader.** `LoaderPlate` and `LoadingScreen` deleted. The 3D lazy-loads at idle behind the poster and cross-fades in (350 ms) on the first real scroll (or when ready). The canvas stops rendering while the poster is up and unscrolled. `just poster` renders both posters from the real scene (`?poster=1`: frozen at p=0, no page text, max transmission quality; any machine with a GPU can run it). Both preloaded in `index.html` with media queries.

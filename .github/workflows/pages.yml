@@ -1,7 +1,6 @@
 name: Deploy to GitHub Pages
 on:
-  push:
-    branches: [main]
+  # manual only (D-104): run it from the Actions tab when a preview should go up
   workflow_dispatch:
 permissions:
   contents: read
@@ -25,6 +24,8 @@ jobs:
         env:
           # project pages live at https://<user>.github.io/<repo>/ (D-103)
           BASE_PATH: /${{ github.event.repository.name }}/
+          # preview build: keep search engines out (D-105); the Netlify build does not set this
+          NOINDEX: "1"
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
