@@ -2,14 +2,12 @@ import { useProgress } from "@react-three/drei";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useState } from "react";
 import { copy } from "../content/copy";
-import { useJar } from "../theme/JarContext";
 
 /**
  * Loader that sits only where the jar will appear (not over the page, D-49).
  * Stacked dark logo on the night colour + progress bar; fades out into the jar.
  */
 export default function LoadingScreen() {
-	const { colour } = useJar();
 	const { progress, active } = useProgress();
 	const reduce = useReducedMotion();
 	const [giveUp, setGiveUp] = useState(false);
@@ -30,7 +28,7 @@ export default function LoadingScreen() {
 					className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-6 rounded-3xl bg-(--night)"
 				>
 					<img
-						src={`/images/logo-stacked-${colour}-dark.svg`}
+						src="/images/logo-stacked-green-dark.svg"
 						alt={copy.ui.logoAlt}
 						className="h-28 w-auto"
 					/>

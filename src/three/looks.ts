@@ -3,12 +3,10 @@ import { themes } from "../theme/tokens";
 
 export type Look = { colour: JarColour; label: JarLabel };
 
-/** The 4 looks: green A/B, pink A/B. */
-export const looks: readonly Look[] = [
+/** The two jars on the page (D-57): green A on the left, pink A on the right. */
+export const jars: readonly Look[] = [
 	{ colour: "green", label: "a" },
-	{ colour: "green", label: "b" },
 	{ colour: "pink", label: "a" },
-	{ colour: "pink", label: "b" },
 ];
 
 /** Body and gummy colours per jar colour (hex values only from SPEC / theme tokens). */

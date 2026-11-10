@@ -1,12 +1,12 @@
 import Header from "./components/Header";
-import Hero from "./components/Hero";
+import Story from "./components/Story";
 import { JarProvider } from "./theme/JarContext";
 
 export default function App() {
 	return (
 		<JarProvider>
 			<Header />
-			<Hero />
+			<Story />
 		</JarProvider>
 	);
 }

@@ -3,12 +3,18 @@ import {
 	useGLTF,
 	useTexture,
 } from "@react-three/drei";
-import { useThree } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
+import type { MotionValue } from "motion/react";
 import { useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import type { JarColour, JarLabel } from "../theme/tokens";
 import { applyLabelFit, createLabelMask, labelBandSize } from "./labelFit";
 import { jarColours, labelUrl } from "./looks";
+import { timeline } from "./storyTimeline";
+
+/** How far the cap rises when the jar is fully open (jar units). */
+const CAP_LIFT = 1.3;
+
 import { Jar } from "./models/Jar";
 
 type Props = {
@@ -17,6 +23,8 @@ type Props = {
 	textureSize?: 1024 | 2048;
 	/** high tier: the pink jar uses real frosted transmission. Low tier: semi-transparent physical material. */
 	transmission?: boolean;
+	/** Story scroll progress: lifts and turns the cap (D-59). Undefined = cap stays closed. */
+	progress?: MotionValue<number>;
 } & Omit<React.JSX.IntrinsicElements["group"], "ref">;
 
 /**
@@ -28,6 +36,7 @@ export function LabeledJar({
 	label,
 	textureSize = 2048,
 	transmission = false,
+	progress,
 	...props
 }: Props) {
 	const group = useRef<THREE.Group>(null);
@@ -41,6 +50,7 @@ export function LabeledJar({
 	const { nodes } = useGLTF("/models/jar.glb") as unknown as {
 		nodes: { Body: THREE.Mesh };
 	};
+	const cap = useRef<{ mesh: THREE.Mesh; baseY: number } | null>(null);
 	const frosted = colour === "pink" && transmission;
 
 	// Cap and label get their own materials (once per mount).
@@ -55,18 +65,30 @@ export function LabeledJar({
 			own.push(m);
 			return { mesh, m };
 		};
-		const cap = clone("Cap").m;
-		cap.color.set("#ffffff"); // white, slightly glossy
-		cap.roughness = 0.3;
-		cap.metalness = 0;
+		const capClone = clone("Cap");
+		cap.current = { mesh: capClone.mesh, baseY: capClone.mesh.position.y };
+		const capMat = capClone.m;
+		capMat.color.set("#ffffff"); // white, slightly glossy
+		capMat.roughness = 0.3;
+		capMat.metalness = 0;
 		const l = clone("Label");
 		mats.current = { label: l.m, band: labelBandSize(l.mesh) };
 		return () => {
+			cap.current = null;
 			for (const m of own) m.dispose();
 			mask.dispose();
 			mats.current = null;
 		};
 	}, [mask]);
+
+	// Cap lifts and unscrews with the story.
+	useFrame(() => {
+		const c = cap.current;
+		if (!c || !progress) return;
+		const lift = timeline(progress.get()).capLift;
+		c.mesh.position.y = c.baseY + CAP_LIFT * lift;
+		c.mesh.rotation.y = Math.PI * lift;
+	});
 
 	// Body material follows the jar colour and tier.
 	useLayoutEffect(() => {

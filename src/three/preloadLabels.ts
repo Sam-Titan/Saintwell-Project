@@ -1,7 +1,7 @@
 import { useTexture } from "@react-three/drei";
-import { labelUrl, looks } from "./looks";
+import { jars, labelUrl } from "./looks";
 
-/** Start loading all 4 label textures at once, so swapping looks is instant. Safe to call many times. */
+/** Start loading both jar labels at once. Safe to call many times. */
 export function preloadLabels(size: 1024 | 2048) {
-	useTexture.preload(looks.map((l) => labelUrl(l, size)));
+	useTexture.preload(jars.map((l) => labelUrl(l, size)));
 }

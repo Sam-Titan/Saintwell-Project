@@ -18,15 +18,13 @@ export const copy = {
 		category: "Nutraceutical",
 	},
 	ui: {
-		jarPicker: "Jar colour",
-		labelPicker: "Label",
-		jarOptions: { green: "Green jar", pink: "Pink jar" },
-		labelOptions: { a: "Label A", b: "Label B" },
-		loading: "Loading the jar",
-		canvasDescription: (colour: string, label: string) =>
-			`3D view of the SAINTWELL Melatonin Gummies jar, ${colour}, ${label}, slowly turning`,
-		fallbackAlt: (colour: string, label: string) =>
-			`SAINTWELL Melatonin Gummies, ${colour}, ${label}`,
+		loading: "Loading the jars",
+		canvasDescription:
+			"3D view of two SAINTWELL Melatonin Gummies jars, green and pink. Scrolling opens the jars, the gummies float out, then the jars close again.",
+		fallbackAlt: {
+			green: "SAINTWELL Melatonin Gummies, green jar",
+			pink: "SAINTWELL Melatonin Gummies, pink jar",
+		},
 		logoAlt: "SAINTWELL",
 	},
 	badges: ["Vegan", "Gluten Free", "Non GMO"],

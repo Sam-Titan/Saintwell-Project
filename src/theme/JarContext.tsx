@@ -1,41 +1,18 @@
-import {
-	createContext,
-	type ReactNode,
-	useContext,
-	useEffect,
-	useMemo,
-	useState,
-} from "react";
-import { type JarColour, type JarLabel, themes } from "./tokens";
+import { type MotionValue, useMotionValue } from "motion/react";
+import { createContext, type ReactNode, useContext } from "react";
 
 type JarState = {
-	colour: JarColour;
-	label: JarLabel;
-	setColour: (colour: JarColour) => void;
-	setLabel: (label: JarLabel) => void;
+	/** Story scroll progress 0..1 (smoothed). A MotionValue, so scrolling does not re-render React. */
+	progress: MotionValue<number>;
 };
 
 const JarContext = createContext<JarState | null>(null);
 
 export function JarProvider({ children }: { children: ReactNode }) {
-	const [colour, setColour] = useState<JarColour>("green");
-	const [label, setLabel] = useState<JarLabel>("a");
-	// Theme follows the jar (D-13): CSS variables on <html>, values from tokens.ts
-	useEffect(() => {
-		const t = themes[colour];
-		const root = document.documentElement.style;
-		root.setProperty("--night", t.night);
-		root.setProperty("--accent", t.accent);
-		root.setProperty("--font-body", t.fontBody);
-		root.setProperty("--font-display", t.fontDisplay);
-		root.setProperty("--jar-colour", colour);
-		document.documentElement.dataset.theme = colour;
-	}, [colour]);
-	const value = useMemo(
-		() => ({ colour, label, setColour, setLabel }),
-		[colour, label],
+	const progress = useMotionValue(0);
+	return (
+		<JarContext.Provider value={{ progress }}>{children}</JarContext.Provider>
 	);
-	return <JarContext.Provider value={value}>{children}</JarContext.Provider>;
 }
 
 export function useJar(): JarState {

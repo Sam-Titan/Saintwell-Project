@@ -1,21 +1,82 @@
 import { useGLTF } from "@react-three/drei";
-import { useLayoutEffect, useMemo, useRef } from "react";
+import { useFrame, useThree } from "@react-three/fiber";
+import type { MotionValue } from "motion/react";
+import { useCallback, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import type { JarColour } from "../theme/tokens";
 import { jarColours } from "./looks";
+import { gummyPath, gummyProgress, timeline, type Vec3 } from "./storyTimeline";
 
 type GummyGLTF = { nodes: { Gummy: THREE.Mesh } };
 
-/** Many gummies in one draw call (InstancedMesh). `transforms` are positions/rotations in jar units. */
+/** Fixed pseudo-random numbers (same layout every load). */
+function rng(seed: number) {
+	let s = seed;
+	return () => {
+		s = (s * 1664525 + 1013904223) % 4294967296;
+		return s / 4294967296;
+	};
+}
+
+type Gummy = {
+	rest: Vec3;
+	float: Vec3;
+	spin: Vec3;
+	phase: number;
+	scale: number;
+};
+
+/** Jar units: radius 1, neck opening at y ~2.45, cap lifts to ~3.9. */
+const NECK: Vec3 = [0, 2.5, 0];
+
+function layout(count: number, seed: number): Gummy[] {
+	const r = rng(seed);
+	return Array.from({ length: count }, (_, i) => {
+		const a = r() * Math.PI * 2;
+		const rad = Math.sqrt(r()) * 0.62;
+		const rest: Vec3 = [
+			Math.cos(a) * rad,
+			0.34 + (i / count) * 1.4 + r() * 0.12,
+			Math.sin(a) * rad,
+		];
+		// float on a ring around the axis, clear of the lifted cap (radius 0.93)
+		const fa = (i / count) * Math.PI * 2 + r() * 0.5;
+		const fr = 1.25 + r() * 0.5;
+		const float: Vec3 = [
+			Math.cos(fa) * fr,
+			2.9 + r() * 1.8,
+			Math.sin(fa) * fr * 0.55,
+		];
+		return {
+			rest,
+			float,
+			spin: [r() * 6.28, r() * 6.28, r() * 6.28],
+			phase: r() * 6.28,
+			scale: 0.9 + r() * 0.25,
+		};
+	});
+}
+
+/**
+ * Gummies for one jar, one draw call (InstancedMesh). They start inside the jar, rise through the
+ * neck when the jar opens and sink back when it closes, driven by scroll `progress` (D-59).
+ * `progress` undefined = still (reduced motion): gummies stay inside the jar.
+ */
 export function Gummies({
 	colour,
-	transforms,
+	count,
+	progress,
+	seed = 7,
 }: {
 	colour: JarColour;
-	transforms: readonly THREE.Matrix4[];
+	count: number;
+	progress?: MotionValue<number>;
+	seed?: number;
 }) {
 	const { nodes } = useGLTF("/models/gummy.glb") as unknown as GummyGLTF;
 	const mesh = useRef<THREE.InstancedMesh>(null);
+	const invalidate = useThree((s) => s.invalidate);
+	const gummies = useMemo(() => layout(count, seed), [count, seed]);
 	const material = useMemo(
 		() =>
 			new THREE.MeshStandardMaterial({
@@ -24,24 +85,59 @@ export function Gummies({
 			}),
 		[colour],
 	);
+	const tmp = useMemo(
+		() => ({
+			m: new THREE.Matrix4(),
+			q: new THREE.Quaternion(),
+			e: new THREE.Euler(),
+			p: new THREE.Vector3(),
+			s: new THREE.Vector3(),
+		}),
+		[],
+	);
+
+	const update = useCallback(
+		(p: number, time: number) => {
+			const m = mesh.current;
+			if (!m) return;
+			const tl = timeline(p);
+			// the exported mesh is quantised: its node carries the real scale
+			const base = nodes.Gummy.scale.x;
+			gummies.forEach((g, i) => {
+				const t = gummyProgress(tl.gummyOut, i, gummies.length);
+				const pos = gummyPath(t, g.rest, NECK, g.float);
+				const bob = Math.sin(time * 1.1 + g.phase) * 0.07 * t;
+				const sway = Math.sin(time * 0.6 + g.phase) * 0.25 * tl.drift;
+				tmp.p.set(pos[0] + sway, pos[1] + bob, pos[2]);
+				tmp.e.set(
+					g.spin[0] + t * 2.2 + time * 0.25 * t,
+					g.spin[1] + t * 3.1,
+					g.spin[2],
+				);
+				tmp.q.setFromEuler(tmp.e);
+				const s = base * g.scale;
+				tmp.s.set(s, s, s);
+				m.setMatrixAt(i, tmp.m.compose(tmp.p, tmp.q, tmp.s));
+			});
+			m.instanceMatrix.needsUpdate = true;
+		},
+		[gummies, nodes, tmp],
+	);
+
 	useLayoutEffect(() => {
-		const m = mesh.current;
-		if (!m) return;
-		// the exported mesh is quantised: its node carries the real scale
-		const base = new THREE.Matrix4().makeScale(
-			nodes.Gummy.scale.x,
-			nodes.Gummy.scale.y,
-			nodes.Gummy.scale.z,
-		);
-		transforms.forEach((t, i) => {
-			m.setMatrixAt(i, t.clone().multiply(base));
-		});
-		m.instanceMatrix.needsUpdate = true;
-	}, [transforms, nodes]);
+		update(progress ? progress.get() : 0, 0);
+		invalidate();
+	}, [update, progress, invalidate]);
+
+	useFrame((state) => {
+		if (progress) update(progress.get(), state.clock.elapsedTime);
+	});
+
 	return (
 		<instancedMesh
 			ref={mesh}
-			args={[nodes.Gummy.geometry, material, transforms.length]}
+			args={[nodes.Gummy.geometry, material, gummies.length]}
+			frustumCulled={false}
 		/>
 	);
 }
