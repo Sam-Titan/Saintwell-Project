@@ -20,26 +20,60 @@ export const copy = {
 	ui: {
 		loading: "Loading the jars",
 		canvasDescription:
-			"3D view of two SAINTWELL Melatonin Gummies jars, green and pink. Scrolling opens the jars, the gummies float out, then the jars close again.",
+			"3D view of two SAINTWELL Melatonin Gummies jars, a green one standing and a pink one lying on its side. Scrolling opens the jars and shows the gummies, then the jars close again.",
 		fallbackAlt: {
 			green: "SAINTWELL Melatonin Gummies, green jar",
 			pink: "SAINTWELL Melatonin Gummies, pink jar",
 		},
 		logoAlt: "SAINTWELL",
 	},
+	nav: [
+		{ label: "Ingredients", href: "#ingredients" },
+		{ label: "Benefits", href: "#benefits" },
+		{ label: "About", href: "#about" },
+		{ label: "Contact", href: "#contact" },
+	],
+	menu: { open: "Open menu", close: "Close menu", label: "Menu" },
+	hero: {
+		left: "Restful",
+		right: "Sleep.",
+		leftSub: "Advanced Sleep Support Formula",
+		rightSub: ["5 mg Melatonin", "with Chamomile & Vitamin B6"],
+		scroll: "Scroll down",
+		bottom: "30 Gummies · Nutraceutical",
+	},
+	social: [
+		{ name: "Instagram", href: "#" },
+		{ name: "Facebook", href: "#" },
+	],
 	sections: {
 		ingredients: "Ingredients",
 		benefits: "Benefits",
-		badges: "Product badges",
+		glance: "At a glance",
+	},
+	steps: ["Ingredients", "Benefits"],
+	// 4a: left column then right column (D-79)
+	ingredientBlocks: [
+		{ title: "Melatonin 5 mg", text: PLACEHOLDER },
+		{ title: "Chamomile", text: PLACEHOLDER },
+		{ title: "Vitamin B6", text: PLACEHOLDER },
+		{ title: "Tasty & easy to take", text: PLACEHOLDER },
+	],
+	// 4b
+	benefitBlocks: [
+		{ title: "Calm Mind", text: PLACEHOLDER },
+		{ title: "Restful Sleep", text: PLACEHOLDER },
+		{ title: "Wake Refreshed", text: PLACEHOLDER },
+		{ title: "Advanced sleep support formula", text: PLACEHOLDER },
+	],
+	numbers: {
+		melatonin: { value: "5", unit: "mg", label: "Melatonin" },
+		gummies: { value: "30", label: "Gummies" },
+		with: "with Chamomile & Vitamin B6",
 	},
 	badges: ["Vegan", "Gluten Free", "Non GMO"],
-	benefits: ["Calm Mind", "Restful Sleep", "Wake Refreshed"],
-	ingredients: [
-		{ name: "Melatonin 5 mg", text: PLACEHOLDER },
-		{ name: "Chamomile", text: PLACEHOLDER },
-		{ name: "Vitamin B6", text: PLACEHOLDER },
-	],
-	about: { heading: PLACEHOLDER, text: PLACEHOLDER },
+	about: { heading: "About", text: PLACEHOLDER },
+	contact: { heading: "Contact", text: PLACEHOLDER },
 	footer: {
 		contact: PLACEHOLDER,
 		socials: PLACEHOLDER,

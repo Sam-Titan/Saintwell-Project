@@ -40,11 +40,11 @@
 	src: url("/fonts/lora-700-italic.woff2") format("woff2");
 }
 
-/* Inter ships as one variable file covering 400, 500 and 700 */
+/* Inter ships as one variable file (wght axis); declared 400-800 so the hero "Sleep." can use 800 (D-89) */
 @font-face {
 	font-family: "Inter";
 	font-style: normal;
-	font-weight: 400 700;
+	font-weight: 400 800;
 	font-display: swap;
 	src: url("/fonts/inter-latin-variable.woff2") format("woff2");
 }
@@ -56,6 +56,7 @@
 	--color-pink: #d79aa8;
 	--color-light-pink: #e7c4cc;
 	--color-blush: #f9eff2;
+	--color-dark-olive: #2e3723;
 	--color-cream: #f8f5ec;
 	--color-white: #ffffff;
 
@@ -75,6 +76,13 @@
 
 html {
 	background: var(--color-cream);
+}
+
+/* nav links scroll smoothly to the scene (D-86); no smooth scroll under reduced motion */
+@media (prefers-reduced-motion: no-preference) {
+	html {
+		scroll-behavior: smooth;
+	}
 }
 
 body {
