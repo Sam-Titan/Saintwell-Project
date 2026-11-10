@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { gummyPath, gummyProgress, timeline } from "./storyTimeline";
+import { FLOAT_Y, gummyPath, gummyProgress, timeline } from "./storyTimeline";
 
 describe("timeline", () => {
 	it("starts closed, turning, text visible", () => {
@@ -120,5 +120,12 @@ describe("gummies", () => {
 		expect(gummyPath(0, rest, neck, float)).toEqual([...rest]);
 		expect(gummyPath(0.5, rest, neck, float)).toEqual([...neck]);
 		expect(gummyPath(1, rest, neck, float)).toEqual([...float]);
+	});
+});
+
+describe("gummy float range", () => {
+	it("stays well below the lifted caps (cap top at full lift = 4.16 jar units), clear of the heading band", () => {
+		// gummy radius + bob ~0.5
+		expect(FLOAT_Y.min + FLOAT_Y.spread + 0.5).toBeLessThan(4.16);
 	});
 });

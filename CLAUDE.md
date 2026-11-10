@@ -47,6 +47,7 @@ No backend, Python packages (Blender's built-in Python is fine), uv, Zustand, Re
 - Commit style: Conventional Commits (`feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`). Small commits.
 - Never use `--no-verify`. If a hook fails, fix the cause.
 - Never commit secrets, `.env`, or files in `blender/out/`.
+- Never run `git stash`, `reset`, `rebase`, `checkout -- .` or other history/working-tree rewriting commands without asking Sam.
 
 ## Brand rules
 

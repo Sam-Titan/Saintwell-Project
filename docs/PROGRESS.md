@@ -12,6 +12,20 @@ Claude Code: add a new entry at the TOP at the end of every session. Keep it sho
 
 ## Session log
 
+### 2026-11-10 — Phase 4 review fixes
+**Done** (D-74 to D-78)
+- No-WebGL path no longer loads drei/three: `LoaderPlate` (plain stacked logo) is the Suspense fallback; the `useProgress` bar moved into the lazy 3D chunk (`src/three/LoadingScreen.tsx`). Main bundle (raw / gzip): **774 KB / 229 KB -> 384 KB / 125 KB**. Lazy chunks: HeroScene 261 -> 267 KB (82 KB gz), Texture (three/drei) 539 -> 918 KB (243 KB gz), both only fetched when WebGL exists.
+- `lighthouserc.json`: 3 runs, median. Fallback path: Perf 78 / 91 / 94 (**median 91**), A11y 100, BP 100, SEO 83 (Phase 5 item; the only failing assertion).
+- Camera frame: 19 % clear band above the cap tops at full lift (18 % measured, desktop 143 px of 810, mobile 150 px of 844), 6 % below the jars. Caps never near the edge; cap lift unchanged. Gummy float capped (2.6-3.6 jar units, cap tops at 4.16), out of the band; unit tested. Headings sit in the band.
+- Story height 800vh below 640 px, 900vh above (D-75). D-73 approved. CLAUDE.md git rule added (D-78).
+- Tests: vitest 35, Playwright 20 pass. Fixed test flakiness (dev perf overlay adds a second canvas; longer waits for the slower lazy load).
+- Screenshots (low tier): `.playwright-mcp/phase4b-{desktop,mobile}-p{30,40,50}.png`.
+
+**Next**
+- Sam: review, approve, push. Then Phase 5.
+
+---
+
 ### 2026-11-10 — Phase 4 (scroll story)
 **Done** (D-62 to D-73 logged; SPEC and PHASES updated)
 - Timeline (pure, unit tested) now 900vh: night 0.06-0.14, caps 0.12-0.22, gummies out 0.18-0.34, 3 cards 0.31-0.58, 3 benefits 0.58-0.79, gummies sink 0.76-0.84, caps close 0.82-0.88, morning 0.86-0.94, badges 0.90-0.97. Cards and benefits never show together; scroll up plays it in reverse.
@@ -24,7 +38,7 @@ Claude Code: add a new entry at the TOP at the end of every session. Keep it sho
 - `just lighthouse` (fallback path, needs `CHROME_PATH` = Playwright headless shell here): Perf 79-87 across runs (was 93; noisy, main bundle only +10 KB, LCP is the fallback jar image), SEO 83 (Phase 5), A11y and BP passed.
 
 **Notes for Sam**
-- **900vh on mobile:** I cannot judge feel on a laptop. By numbers: 8 phone screens of scrolling; each card or benefit gets about 63vh (about 530 px on a phone). I think 750-800vh is enough for phones (about 52vh per item); desktop is fine at 900. Say the word and I change one number.
+- **900vh on mobile (now 800vh, D-75):** I cannot judge feel on a laptop. By numbers: 8 phone screens of scrolling; each card or benefit gets about 63vh (about 530 px on a phone). I think 750-800vh is enough for phones (about 52vh per item); desktop is fine at 900. Say the word and I change one number.
 - Main bundle is 774 KB because `LoadingScreen` imports drei. Moving it into the lazy 3D chunk would cut the no-WebGL path a lot (Phase 6 candidate; not done, it changes when the loader appears).
 - High tier on this machine is software GL (3 fps): the frosted pink jar looks grainy and the bloom adds a faint haze. Needs a real GPU look in Phase 6. Alpha stays transparent with bloom, so the CSS night shows through.
 - Desktop: tops of the lifted caps touch the top edge at p 0.3-0.5 (frame was fitted in Phase 3); "Ingredients"/"Benefits" headings sit over gummies. Tell me if you want either moved.

@@ -50,7 +50,9 @@ test("two jars render, no console errors, nothing from outside localhost", async
 			external.push(r.url());
 	});
 	await page.goto("/?tier=high");
-	await expect(page.locator("canvas[data-engine]")).toBeVisible();
+	await expect(page.locator("canvas[data-engine]").first()).toBeVisible({
+		timeout: 20000,
+	});
 	await expect(page.getByRole("progressbar")).toBeHidden({ timeout: 30000 });
 	await scrollToStory(page, 0.4);
 	await page.waitForTimeout(1500);
@@ -101,7 +103,7 @@ test("keyboard scrolling (Space, PageDown, arrows) drives the story", async ({
 			.toBeLessThan(0.02);
 		await page.keyboard.press(key);
 		await expect
-			.poll(() => progress(page), { timeout: 15000, message: key })
+			.poll(() => progress(page), { timeout: 30000, message: key })
 			.toBeGreaterThan(key === "ArrowDown" ? 0.005 : 0.1);
 	}
 });
@@ -126,7 +128,9 @@ test("software renderer (headless Chromium) falls back to images by default", as
 test("tier=low renders without errors", async ({ page }) => {
 	const errors = collectErrors(page);
 	await page.goto("/?tier=low");
-	await expect(page.locator("canvas[data-engine]")).toBeVisible();
+	await expect(page.locator("canvas[data-engine]").first()).toBeVisible({
+		timeout: 20000,
+	});
 	await scrollToStory(page, 0.4);
 	await page.waitForTimeout(2000);
 	expect(errors).toEqual([]);
@@ -136,7 +140,9 @@ test("reduced motion: still jars, no tall scroll story", async ({ page }) => {
 	await page.emulateMedia({ reducedMotion: "reduce" });
 	const errors = collectErrors(page);
 	await page.goto("/?tier=high");
-	await expect(page.locator("canvas[data-engine]")).toBeVisible();
+	await expect(page.locator("canvas[data-engine]").first()).toBeVisible({
+		timeout: 20000,
+	});
 	const box = await page.locator("section[data-story-progress]").boundingBox();
 	expect(box?.height).toBeLessThanOrEqual(page.viewportSize()?.height ?? 0);
 	await expect(page.getByRole("heading", { level: 1 })).toHaveCSS(

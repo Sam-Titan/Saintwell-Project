@@ -14,7 +14,7 @@ import { useJar } from "../theme/JarContext";
 import type { Layout } from "../three/HeroScene";
 import { jars } from "../three/looks";
 import { timeline } from "../three/storyTimeline";
-import LoadingScreen from "./LoadingScreen";
+import LoaderPlate from "./LoaderPlate";
 import NightSky from "./NightSky";
 import { Badges, Benefits, Ingredients } from "./StoryPanels";
 
@@ -107,11 +107,13 @@ export default function Story() {
 			<section
 				ref={wrap}
 				data-story-progress="0.000"
-				className={reduce ? "relative h-screen" : "relative h-[900vh]"}
+				className={
+					reduce ? "relative h-screen" : "relative h-[800vh] sm:h-[900vh]"
+				}
 			>
 				<div className="sticky top-0 h-screen overflow-hidden">
 					{!reduce && <NightSky progress={progress} layout={layout} />}
-					<Suspense fallback={null}>
+					<Suspense fallback={<LoaderPlate />}>
 						<HeroScene
 							tier={tier}
 							progress={reduce ? undefined : progress}
@@ -132,9 +134,6 @@ export default function Story() {
 							<Badges progress={progress} />
 						</>
 					)}
-					<div className="pointer-events-none absolute top-[58%] left-1/2 h-[min(46vh,22rem)] w-[min(80vw,26rem)] -translate-x-1/2 -translate-y-1/2">
-						<LoadingScreen />
-					</div>
 				</div>
 			</section>
 			{reduce && <StaticSections />}

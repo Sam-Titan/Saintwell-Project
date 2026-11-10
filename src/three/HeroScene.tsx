@@ -7,6 +7,7 @@ import { copy } from "../content/copy";
 import { type Tier, tierSettings } from "../hooks/useDeviceTier";
 import { Gummies } from "./Gummies";
 import { LabeledJar } from "./LabeledJar";
+import LoadingScreen from "./LoadingScreen";
 import { jars } from "./looks";
 import { Sky } from "./Sky";
 import { Studio } from "./Studio";
@@ -25,11 +26,14 @@ const POSITIONS: Record<Layout, readonly [number, number, number][]> = {
 		[0.95, -0.55, -0.9],
 	],
 };
-/** Width and height of the area that must stay in frame (jars + lifted caps + floating gummies). */
-const FRAME: Record<Layout, { w: number; h: number }> = {
-	side: { w: 6.9, h: 6.4 },
-	stagger: { w: 5.9, h: 6.4 },
-};
+/** Width of the area that must stay in frame (jars + lifted caps + floating gummies). */
+const FRAME_W: Record<Layout, number> = { side: 6.9, stagger: 5.9 };
+/** Vertical content, world units (measured from screenshots): jar bottom, and the cap top at full lift. */
+const CONTENT_BOTTOM = -2.58;
+const CONTENT_TOP = 1.76;
+/** Clear space above the cap tops (headline band: logo + h2, D-74) and below the jars, as a share of the view height. */
+const TOP_BAND = 0.19;
+const BOTTOM_GAP = 0.06;
 const FOV = 28;
 
 /** Moves the camera back until the whole frame area fits the canvas (any aspect ratio). */
@@ -40,10 +44,18 @@ function FitCamera({ layout }: { layout: Layout }) {
 	useLayoutEffect(() => {
 		const half = Math.tan((FOV / 2) * (Math.PI / 180));
 		const aspect = size.width / size.height;
-		const f = FRAME[layout];
-		const z = Math.max(f.h / 2 / half, f.w / 2 / (aspect * half));
-		camera.position.set(0, 0.5, z);
-		camera.lookAt(0, 0, 0);
+		// view height so that the content leaves TOP_BAND above and BOTTOM_GAP below
+		const hNeeded =
+			(CONTENT_TOP - CONTENT_BOTTOM) / (1 - TOP_BAND - BOTTOM_GAP);
+		const z = Math.max(
+			hNeeded / 2 / half,
+			FRAME_W[layout] / 2 / (aspect * half),
+		);
+		const h = 2 * z * half; // view height at the jars (>= hNeeded)
+		// centre the view so the cap tops sit TOP_BAND below the top edge
+		const centre = CONTENT_TOP + TOP_BAND * h - h / 2;
+		camera.position.set(0, centre + 0.5, z);
+		camera.lookAt(0, centre, 0);
 		camera.updateProjectionMatrix();
 		invalidate();
 	}, [camera, size, layout, invalidate]);
@@ -154,22 +166,25 @@ export default function HeroScene({
 }) {
 	const s = tierSettings(tier);
 	return (
-		<Canvas
-			className="h-full w-full"
-			dpr={s.dpr}
-			frameloop={progress ? (active ? "always" : "never") : "demand"}
-			camera={{ position: [0, 0.5, 12], fov: FOV }}
-			gl={{ antialias: tier === "high", alpha: true }}
-			role="img"
-			aria-label={copy.ui.canvasDescription}
-		>
-			<FitCamera layout={layout} />
-			<Studio />
-			{progress && <Sky progress={progress} tier={tier} />}
-			<Suspense fallback={null}>
-				<Jars layout={layout} tier={tier} progress={progress} />
-			</Suspense>
-			{import.meta.env.DEV && <Perf position="bottom-left" minimal />}
-		</Canvas>
+		<>
+			<Canvas
+				className="h-full w-full"
+				dpr={s.dpr}
+				frameloop={progress ? (active ? "always" : "never") : "demand"}
+				camera={{ position: [0, 0.5, 12], fov: FOV }}
+				gl={{ antialias: tier === "high", alpha: true }}
+				role="img"
+				aria-label={copy.ui.canvasDescription}
+			>
+				<FitCamera layout={layout} />
+				<Studio />
+				{progress && <Sky progress={progress} tier={tier} />}
+				<Suspense fallback={null}>
+					<Jars layout={layout} tier={tier} progress={progress} />
+				</Suspense>
+				{import.meta.env.DEV && <Perf position="bottom-left" minimal />}
+			</Canvas>
+			<LoadingScreen />
+		</>
 	);
 }

@@ -6,7 +6,13 @@ import * as THREE from "three";
 import type { JarColour } from "../theme/tokens";
 import { jarColours } from "./looks";
 import { rng } from "./random";
-import { gummyPath, gummyProgress, timeline, type Vec3 } from "./storyTimeline";
+import {
+	FLOAT_Y,
+	gummyPath,
+	gummyProgress,
+	timeline,
+	type Vec3,
+} from "./storyTimeline";
 
 type GummyGLTF = { nodes: { Gummy: THREE.Mesh } };
 
@@ -40,7 +46,7 @@ function layout(count: number, seed: number): Gummy[] {
 		const fr = 1.25 + r() * 0.5;
 		const float: Vec3 = [
 			Math.cos(fa) * fr,
-			2.9 + r() * 1.8,
+			FLOAT_Y.min + r() * FLOAT_Y.spread,
 			Math.sin(fa) * fr * 0.55,
 		];
 		return {

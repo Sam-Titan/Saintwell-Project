@@ -28,6 +28,9 @@ export function smooth(a: number, b: number, x: number): number {
 const pulse = (a: number, b: number, c: number, d: number, x: number) =>
 	clamp01(smooth(a, b, x) - smooth(c, d, x));
 
+/** Gummy float height range (jar units). Capped so gummies stay below the lifted caps and the heading band (D-74). */
+export const FLOAT_Y = { min: 2.6, spread: 1 } as const;
+
 export type Triple = readonly [number, number, number];
 
 export type Timeline = {
