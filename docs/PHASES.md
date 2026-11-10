@@ -51,13 +51,13 @@ Goal: all brand images, colours and fonts ready to use.
 
 Goal: jar and gummy models ready as React components.
 
-- [ ] Blender (pinned LTS) installed in WSL2; version written in DECISIONS.md
-- [ ] `blender/build_jar.py`: body, rim, white screw cap (separate object), label mesh with correct UVs
-- [ ] `blender/build_gummy.py`: soft rounded gummy
-- [ ] `just models`: run Blender scripts → export `.glb` → gltf-transform → gltfjsx components
-- [ ] Label texture wraps correctly for all 4 labels (no stretching, seam at back)
-- [ ] Total model size within budget
-- [ ] Screenshots of all 4 looks for Sam to approve
+- [x] Blender (pinned LTS) installed in WSL2; version written in DECISIONS.md
+- [x] `blender/build_jar.py`: body, rim, white screw cap (separate object), label mesh with correct UVs
+- [x] `blender/build_gummy.py`: soft rounded gummy
+- [x] `just models`: run Blender scripts → export `.glb` → gltf-transform → gltfjsx components
+- [x] Label texture wraps correctly for all 4 labels (no stretching, seam at back)
+- [x] Total model size within budget
+- [x] Screenshots of all 4 looks for Sam to approve
 
 ## Phase 3 — Hero scene
 

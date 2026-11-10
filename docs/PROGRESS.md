@@ -4,13 +4,33 @@ Claude Code: add a new entry at the TOP at the end of every session. Keep it sho
 
 ## Current state
 
-- Phase: **1 — Brand assets**, built, waiting for Sam's check of the exports
+- Phase: **2 — 3D models**, built, waiting for Sam's approval (see `git log origin/main..main`)
 - Branch: `main` (only branch)
 - Blockers: none
 
 ---
 
 ## Session log
+
+### 2026-11-10 — Phase 2
+**Done**
+- Blender 4.2.7 LTS (tarball in `~/blender`) logged as D-41; `just models` uses `$BLENDER` (README example).
+- `blender/build_jar.py`: Body (open neck, wall thickness, rounded bottom edge), Cap (separate, white, 48 ridges), Label (separate band, own material, UVs). `blender/build_gummy.py`: one low-poly pillow gummy (320 triangles).
+- `just models`: Blender → .glb → gltf-transform (meshopt) → gltfjsx → `src/three/models/{Jar,Gummy}.tsx`. Total models **48 KB** (budget 2 MB).
+- Label fit (`src/three/labelFit.ts`, unit tested): band height fixed, label centred at front, never stretched. pink-b covers 95 % of the circle, green-a 75 %. Uncovered part is at the back and the jar shows through.
+- `LabeledJar` (own materials per jar), `Gummies` (InstancedMesh), temporary 4-look viewer `JarLookViewer` on the test page (front + back).
+- D-42 to D-45 logged. `just check` and `just test` pass. Console: favicon 404 (Phase 5) and a THREE.Clock deprecation warning from r3f 9.8.2.
+- Screenshot: `.playwright-mcp/phase2-looks.png`.
+
+**Notes for Sam**
+- `@types/three` added as the type package for `three` (D-42). Tell me if you want it removed.
+- Cap and pink jar are plain materials for now. Frosted/transmission, final lighting, tiers and reduced motion are Phase 3.
+- Cap lift (Phase 4): the exported mesh is quantised, so the cap node carries its own position. Move the node, not the geometry.
+
+**Next**
+- Sam: review the screenshot and commits, approve, push. Then Phase 3 (hero scene).
+
+---
 
 ### 2026-11-10 — Phase 1 fixes
 **Done**
