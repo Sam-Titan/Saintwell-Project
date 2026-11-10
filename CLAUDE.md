@@ -43,7 +43,7 @@ No backend, Python packages (Blender's built-in Python is fine), uv, Zustand, Re
 
 - Commits are made as Sam's git user. **Never** add `Co-Authored-By`, "Generated with Claude Code", or any Claude/Anthropic mention in commits, PRs, tags, or code comments.
 - **You may commit. You must NEVER push.** Sam pushes.
-- Branch per phase: `phase/0-setup`, `phase/1-assets`, … Never commit straight to `main`.
+- Work on main only. No phase, feature or fix branches. Unpushed commits on main = work under review; Sam reviews them (git log origin/main..main) and pushes when the phase is approved.
 - Commit style: Conventional Commits (`feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`). Small commits.
 - Never use `--no-verify`. If a hook fails, fix the cause.
 - Never commit secrets, `.env`, or files in `blender/out/`.

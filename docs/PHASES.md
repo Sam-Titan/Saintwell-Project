@@ -2,37 +2,37 @@
 
 Rules:
 
-- One phase at a time, on its own branch (`phase/N-name`).
-- A phase is done when every box is ticked AND Sam approves. Then Sam merges to `main` and pushes.
+- One phase at a time. All work on main (no branches).
+- A phase is done when every box is ticked AND Sam approves. Then Sam pushes main.
 - Each phase ends with: `just check` ✅, `just test` ✅, PROGRESS.md updated.
 
 Current phase: **Phase 0 — Setup**
 
 ---
 
-## Phase 0 — Setup  (`phase/0-setup`)
+## Phase 0 — Setup
 
 Goal: empty project that runs locally with all tooling.
 
-- [ ] Git repo (private on GitHub), git user = Sam
-- [ ] `.claude/settings.json` with attribution off
-- [ ] Node 24 (`.nvmrc`), pnpm via corepack, `packageManager` field set
-- [ ] Vite + React + TypeScript (strict)
-- [ ] Tailwind CSS v4 working
-- [ ] Biome configured
-- [ ] Lefthook: Biome + type check + Gitleaks on commit
-- [ ] vitest + one sample test
-- [ ] Playwright + one sample test in `tests/e2e/` (answer **No** to Playwright's GitHub workflow)
-- [ ] `.mcp.json` with @playwright/mcp (`claude mcp add --scope project`)
-- [ ] Lighthouse CI config (`lighthouserc.json`) with targets
-- [ ] Justfile: `dev`, `check`, `test`, `lighthouse`
-- [ ] GitHub Actions CI: lint, type check, unit tests (no deploy)
-- [ ] Dependabot config
-- [ ] Folder structure per STRUCTURE.md; `brand/SAINTWELL.pdf` added
-- [ ] README with setup steps
-- [ ] Blank page with "SAINTWELL" runs with `just dev`
+- [x] Git repo (private on GitHub), git user = Sam
+- [x] `.claude/settings.json` with attribution off
+- [x] Node 24 (`.nvmrc`), pnpm via corepack, `packageManager` field set
+- [x] Vite + React + TypeScript (strict)
+- [x] Tailwind CSS v4 working
+- [x] Biome configured
+- [x] Lefthook: Biome + type check + Gitleaks on commit
+- [x] vitest + one sample test
+- [x] Playwright + one sample test in `tests/e2e/` (answer **No** to Playwright's GitHub workflow)
+- [x] `.mcp.json` with @playwright/mcp (`claude mcp add --scope project`)
+- [x] Lighthouse CI config (`lighthouserc.json`) with targets
+- [x] Justfile: `dev`, `check`, `test`, `lighthouse`
+- [x] GitHub Actions CI: lint, type check, unit tests (no deploy)
+- [x] Dependabot config
+- [x] Folder structure per STRUCTURE.md; `brand/SAINTWELL.pdf` added
+- [x] README with setup steps
+- [x] Blank page with "SAINTWELL" runs with `just dev`
 
-## Phase 1 — Brand assets  (`phase/1-assets`)
+## Phase 1 — Brand assets
 
 Goal: all brand images, colours and fonts ready to use.
 
@@ -47,7 +47,7 @@ Goal: all brand images, colours and fonts ready to use.
 - [ ] Simple test page showing logos, labels, colours, fonts (removed later)
 - [ ] Sam checks the exports look right
 
-## Phase 2 — 3D models  (`phase/2-models`)
+## Phase 2 — 3D models
 
 Goal: jar and gummy models ready as React components.
 
@@ -59,7 +59,7 @@ Goal: jar and gummy models ready as React components.
 - [ ] Total model size within budget
 - [ ] Screenshots of all 4 looks for Sam to approve
 
-## Phase 3 — Hero scene  (`phase/3-hero`)
+## Phase 3 — Hero scene
 
 Goal: first screen works fully.
 
@@ -74,7 +74,7 @@ Goal: first screen works fully.
 - [ ] Keyboard + labels on picker and toggle
 - [ ] fps check on desktop + phone
 
-## Phase 4 — Scroll story  (`phase/4-story`)
+## Phase 4 — Scroll story
 
 Goal: night → morning story works end to end.
 
@@ -89,7 +89,7 @@ Goal: night → morning story works end to end.
 - [ ] Reduced-motion version
 - [ ] Scrolling smooth on desktop + phone
 
-## Phase 5 — Content  (`phase/5-content`)
+## Phase 5 — Content
 
 Goal: all text and non-3D sections finished.
 
@@ -97,10 +97,10 @@ Goal: all text and non-3D sections finished.
 - [ ] Footer: contact, socials, FSSAI licence no., disclaimer (placeholders)
 - [ ] All text comes from `copy.ts`
 - [ ] Copy check: no health claims beyond the label (FSSAI)
-- [ ] SEO: title, description, Open Graph image, favicon, headings
+- [ ] SEO: title, description, Open Graph image, favicon, headings, `public/robots.txt` (allow all)
 - [ ] List of all placeholders for SAINTWELL to fill
 
-## Phase 6 — Polish  (`phase/6-polish`)
+## Phase 6 — Polish
 
 Goal: fast, accessible, works everywhere.
 
@@ -113,7 +113,7 @@ Goal: fast, accessible, works everywhere.
 - [ ] Playwright e2e: loads, picker works, scroll story runs, fallback shows
 - [ ] Test on Chrome, Safari (iOS), Firefox, Android Chrome
 
-## Phase 7 — Release  (`phase/7-release`)
+## Phase 7 — Release
 
 Goal: live on Netlify as v1.0.0.
 
@@ -121,6 +121,7 @@ Goal: live on Netlify as v1.0.0.
 - [ ] Netlify site linked to GitHub `main` (Sam does this)
 - [ ] Production build checked locally (`pnpm build && pnpm preview`)
 - [ ] Lighthouse on the live URL
+- [ ] Add sitemap line to `robots.txt`
 - [ ] CHANGELOG.md: v1.0.0 entry
 - [ ] Tag `v1.0.0` (Sam pushes the tag)
 - [ ] Hand-over note: placeholders still to fill
