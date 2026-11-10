@@ -1,0 +1,10 @@
+pre-commit:
+  parallel: true
+  commands:
+    biome:
+      glob: "*.{ts,tsx,js,json,css}"
+      run: pnpm exec biome check --no-errors-on-unmatched {staged_files}
+    types:
+      run: pnpm exec tsc -b
+    gitleaks:
+      run: gitleaks git --pre-commit --staged --redact
