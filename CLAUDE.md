@@ -72,6 +72,7 @@ No backend, Python packages (Blender's built-in Python is fine), uv, Zustand, Re
 - All 3D files ≤ 2 MB total. Textures ≤ 2048 px desktop, ≤ 1024 px mobile
 - 60 fps desktop, 30+ fps mid-range phones (check with r3f-perf)
 - First screen visible ≤ 2.5 s on 4G
+- **Where measured:** this laptop has no GPU (software WebGL → tier `none`). Phases 3–5: `just lighthouse` checks the page and the fallback path; emulation fps are reported but are not a gate. Phase 6: fps and Lighthouse-with-3D are measured on real hardware (headed Chrome with a GPU + a real phone).
 
 ## Commands
 

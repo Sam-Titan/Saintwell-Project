@@ -35,7 +35,7 @@ test("canvas renders, no console errors, nothing from outside localhost", async 
 		)
 			external.push(r.url());
 	});
-	await page.goto("/");
+	await page.goto("/?tier=high");
 	await expect(page.locator("canvas")).toBeVisible();
 	await expect(page.getByRole("progressbar")).toBeHidden({ timeout: 20000 });
 	expect((await page.request.get("/models/jar.glb")).ok()).toBe(true);
@@ -46,7 +46,7 @@ test("canvas renders, no console errors, nothing from outside localhost", async 
 test("picker works with keyboard and the theme follows the jar", async ({
 	page,
 }) => {
-	await page.goto("/");
+	await page.goto("/?tier=high");
 	const green = page.getByRole("radio", { name: "Green jar" });
 	const pink = page.getByRole("radio", { name: "Pink jar" });
 	await expect(green).toHaveAttribute("aria-checked", "true");
@@ -89,8 +89,18 @@ test("tier=low renders without errors", async ({ page }) => {
 test("reduced motion: still jar, page works", async ({ page }) => {
 	await page.emulateMedia({ reducedMotion: "reduce" });
 	const errors = collectErrors(page);
-	await page.goto("/");
+	await page.goto("/?tier=high");
 	await expect(page.locator("canvas")).toBeVisible();
 	await page.waitForTimeout(1500);
 	expect(errors).toEqual([]);
+});
+
+test("software renderer (headless Chromium) falls back to images by default", async ({
+	page,
+}) => {
+	await page.goto("/");
+	await expect(page.locator("canvas")).toHaveCount(0);
+	await expect(
+		page.getByRole("img", { name: /Green jar, Label A/ }),
+	).toBeVisible();
 });

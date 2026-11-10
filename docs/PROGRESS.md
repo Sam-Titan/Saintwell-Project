@@ -12,6 +12,19 @@ Claude Code: add a new entry at the TOP at the end of every session. Keep it sho
 
 ## Session log
 
+### 2026-11-10 — Phase 3 follow-ups
+**Done**
+- Software WebGL renderer (SwiftShader, llvmpipe, "Software") = tier `none` (D-54); `?tier=` still overrides. Unit tests added. Playwright canvas tests now use `?tier=high`; one new test checks the default fallback in headless Chromium.
+- CLAUDE.md performance budget: fps and Lighthouse-with-3D are measured in Phase 6 on real hardware; Phases 3-5 use `just lighthouse` on the page and fallback path, emulated fps reported only (D-55).
+- pnpm build-script allow list moved to `pnpm-workspace.yaml` (`allowBuilds`: lefthook yes, sharp no, sharp loads fine). The pnpm warning and `ERR_PNPM_IGNORED_BUILDS` are gone (D-56).
+- `just check` and `just test` pass (7 e2e). `just lighthouse` (now the fallback path on this machine): Perf 89, A11y 100, Best Practices 100, SEO 83 (meta description, robots.txt = Phase 5). Perf and SEO are not both gate-passing yet: SEO is a Phase 5 item.
+- Phase 4 not started (you may change the 3D first).
+
+**Next**
+- Sam: review, approve, push. Phase 4 when you say.
+
+---
+
 ### 2026-11-10 — Phase 3 (hero scene)
 **Done**
 - Hero replaces the Phase 1/2 test pages: header (wide/stacked logo), h1 + subtitle, jar picker (Green/Pink) + label toggle (A/B) as real buttons with radio-group semantics (arrows, roving tabindex), jar turning on cream. State in `JarContext`.

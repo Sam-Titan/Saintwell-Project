@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { pickTier, tierFromUrl } from "./useDeviceTier";
+import { isSoftwareRenderer, pickTier, tierFromUrl } from "./useDeviceTier";
 
 const base = { webgl: true, coarsePointer: false };
 
@@ -37,6 +37,40 @@ describe("pickTier", () => {
 				hardwareConcurrency: 8,
 			}),
 		).toBe("high");
+	});
+});
+
+describe("software renderer", () => {
+	it("detects SwiftShader, llvmpipe and Software", () => {
+		expect(
+			isSoftwareRenderer(
+				"ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device), SwiftShader driver)",
+			),
+		).toBe(true);
+		expect(isSoftwareRenderer("llvmpipe (LLVM 15.0.7, 256 bits)")).toBe(true);
+		expect(isSoftwareRenderer("Microsoft Basic Render Driver Software")).toBe(
+			true,
+		);
+		expect(isSoftwareRenderer("ANGLE (NVIDIA, NVIDIA GeForce RTX 3060)")).toBe(
+			false,
+		);
+		expect(isSoftwareRenderer("")).toBe(false);
+		expect(isSoftwareRenderer(undefined)).toBe(false);
+	});
+	it("software renderer means tier none, even on a strong device", () => {
+		expect(
+			pickTier({
+				...base,
+				renderer: "llvmpipe",
+				deviceMemory: 16,
+				hardwareConcurrency: 16,
+			}),
+		).toBe("none");
+	});
+	it("real GPU stays high", () => {
+		expect(pickTier({ ...base, renderer: "ANGLE (Apple, Apple M2)" })).toBe(
+			"high",
+		);
 	});
 });
 
