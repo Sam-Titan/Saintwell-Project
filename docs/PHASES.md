@@ -136,7 +136,7 @@ Goal: storyboard look (`docs/design/storyboard/`), desktop 1440x900 and mobile.
 - [x] Docs: decisions, SPEC, PHASES
 - [x] Gumdrop shape in Blender (crowd + hero mesh), models rebuilt
 - [x] Jelly material for the crowd; sprite look approved by Sam (D-112)
-- [ ] Hero turntable sprites (Cycles, 2 x 24 frames, spin + tilt rock): `just sprites b`, **Sam runs the render**; then commit `public/sprites/`, check the cross-dissolve for ghosting
+- [x] Hero turntable sprites (Cycles, 2 x 24 frames, spin + tilt rock): rendered, 374 KB, committed; no visible ghosting at real size
 - [x] Hero sprite component, CSS glow, hand-off pose, reduced motion (fail soft until the files exist)
 - [x] 4a/4b blur + frame-rate drop; DOF / Bloom / postprocessing packages removed
 - [x] Caps rest on the ground, close again; tests
@@ -145,7 +145,7 @@ Goal: storyboard look (`docs/design/storyboard/`), desktop 1440x900 and mobile.
 - [x] Static sections: sprite frame 00 as a still gummy (fail soft)
 - [x] Posters re-rendered (`just poster`): **not committed, waiting for Sam's look**
 - [x] Tests, `just check`, `just test`, screenshots (hero, open, 4a, 4b; desktop + mobile)
-- [ ] Hand-off check with the real sprites (needs the render)
+- [x] Hand-off check with the real sprites
 - [ ] Sam approves
 
 ## Phase 5 — Content

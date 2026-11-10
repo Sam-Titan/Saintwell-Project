@@ -14,7 +14,7 @@ Claude Code: add a new entry at the TOP at the end of every session. Keep it sho
 
 ### 2026-11-10 — Phase 4R fix round 2 (D-106 to D-114)
 **Done**
-- **Hero gummy = Blender turntable sprite** (Cycles CPU + OIDN; sage-lime / candy pink, smooth jelly, sparse sparkle, backlit, 38 deg + 10 deg rock). `blender/render_gummy.py` is final and committed; `just sprites b` renders 2 x 24 frames at 512 px, 128 samples (about 30 min, **Sam runs it**, README has the nohup command). `HeroSprite` (DOM canvas, cross-dissolve of neighbour frames, CSS glow, reduced motion = frame 0) is built and fails soft: until `public/sprites/` exists the 3D hero mesh stays visible. 3D hero and sprite share one pose function (`heroSpin`, `heroTilt`).
+- **Hero gummy = Blender turntable sprite** (Cycles CPU + OIDN; sage-lime / candy pink, smooth jelly, sparse sparkle, backlit, 38 deg + 10 deg rock). `blender/render_gummy.py` is final and committed; `just sprites b` renders 2 x 24 frames at 512 px, 128 samples (rendered by me in batches: 48 frames, 1596 s = 26.6 min; WebP q88, 374,296 bytes total, committed in `public/sprites/`). `HeroSprite` (DOM canvas, cross-dissolve of neighbour frames, CSS glow, reduced motion = frame 0) is built and fails soft: until `public/sprites/` exists the 3D hero mesh stays visible. 3D hero and sprite share one pose function (`heroSpin`, `heroTilt`).
 - **Crowd**: mid-detail gumdrop (1280 tris), rounder base, softer tinted rim, limited tilt.
 - **4a/4b**: CSS blur (9 px desktop / 6 phone) + slight darkening on the canvas wrapper; canvas drops to about 8 fps while the hero gummy has the stage. DepthOfField, Bloom, `Fx.tsx`, `@react-three/postprocessing` and `postprocessing` removed (also from CLAUDE.md's list).
 - **Caps** rest upside down on the ground beside their jars (green left, pink next to the mouth), below the text rows, and go back on at the end (`capDown` in the timeline).
@@ -26,7 +26,7 @@ Claude Code: add a new entry at the TOP at the end of every session. Keep it sho
 - Posters re-rendered with `just poster`; **not committed** (`public/images/poster-*.webp` modified in the working tree), please look.
 
 **Not done / for Sam**
-- Run the sprite render, then I check the hand-off (3D vs sprite at the same p), the cross-dissolve for ghosting (fallback: 36 frames at 448 px, stepped), bytes (target about 600 KB) and commit `public/sprites/`.
+- Done: hand-off 3D vs sprite matches within ~5% in size/position, similar pose (material differs, covered by the 0.9 to 1 crossfade). Cross-dissolve: faint doubled edge only at 4x zoom, none at real size; dissolve weight now smoothstep(0.3,0.7) so frames stay sharp most of the time. 24 frames kept (36-frame re-render not needed). Posters re-rendered, **uncommitted** until Sam has seen them. Not measurable here (no GPU): fps, frosted jar.
 - No GPU here: real fps and the true frosted-jar look not measured.
 - On phones the pink cap sits partly behind the right-hand text blocks (blurred); desktop is clear (tested).
 
