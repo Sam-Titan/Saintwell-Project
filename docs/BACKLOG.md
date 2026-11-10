@@ -16,3 +16,4 @@ Not in V1. Add ideas here instead of building them. Sam decides what moves into 
 | 10  | Real ingredient descriptions                  | Approved copy from SAINTWELL        |
 | 11  | Recheck THREE.Clock deprecation warning on r3f update | Warning comes from @react-three/fiber 9.8.2 |
 | 12  | Jar picker + label A/B toggle (4 looks)       | Removed in V1 by D-57; label B textures kept |
+| 13  | True transmission material on the hero gummy (if a GPU allows) | Faked with sheen, clearcoat, emissive glow in 4R (D-83); two transmission materials + DOF + Bloom too heavy |

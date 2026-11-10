@@ -6,7 +6,7 @@ Rules:
 - A phase is done when every box is ticked AND Sam approves. Then Sam pushes main.
 - Each phase ends with: `just check` ✅, `just test` ✅, PROGRESS.md updated.
 
-Current phase: **Phase 1 — Brand assets**
+Current phase: **Phase 4R — Redesign**
 
 ---
 
@@ -90,6 +90,26 @@ Goal: night → morning story works end to end.
 - [x] Canvas stops when the stage is off screen
 - [x] e2e: text at the right p, static modes, no external requests
 - [x] Screenshots desktop + mobile stagger; report if 900vh is too long on mobile
+- [ ] Sam approves
+
+## Phase 4R — Redesign (D-79 to D-88)
+
+Goal: storyboard look (`docs/design/storyboard/`), desktop 1440x900 and mobile.
+
+- [ ] Docs: decisions, SPEC, colour row, supersessions
+- [ ] Old Phase 4 look removed (moon, split night, cards)
+- [ ] Timeline: 7 scenes, pure, unit tested; `backgroundAt(p)`
+- [ ] Gummy rebuilt in Blender (hero + crowd, sugar normal map)
+- [ ] Ground + contact shadows; green standing, pink lying
+- [ ] Open: caps unscrew, green gummies rise, pink gummies roll out; return
+- [ ] Hero gummy (green 4a, pink 4b), fake translucency, glow
+- [ ] DOF + Bloom in own lazy chunk, high tier only; low-tier fade/shrink
+- [ ] Hero text, background word, hints, socials, blocks, step marker, Numbers + badges
+- [ ] Header nav, anchors (smooth, instant under reduced motion, scene fully in view), mobile menu, About/Contact stubs
+- [ ] Mobile layout
+- [ ] Static sections for reduced motion and tier none
+- [ ] Tests (unit + e2e), `just check`, `just test`, `just lighthouse`
+- [ ] Screenshots every scene, desktop + mobile (`.playwright-mcp/phase4r-*`)
 - [ ] Sam approves
 
 ## Phase 5 — Content

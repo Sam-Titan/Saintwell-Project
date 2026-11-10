@@ -35,6 +35,7 @@ A one-page brand website for SAINTWELL, featuring a 3D Melatonin Gummies jar and
 | Light pink | `#E7C4CC` | Pink                               |
 | Blush      | `#F9EFF2` | Pink                               |
 | Cream      | `#F8F5EC` | Shared (morning / page background) |
+| Dark olive 2 | `#2E3723` | Numbers scene background only (D-81) |
 | White      | `#FFFFFF` | Shared                             |
 
 ### Fonts (Google Fonts, self-hosted .woff2)
@@ -57,16 +58,20 @@ A one-page brand website for SAINTWELL, featuring a 3D Melatonin Gummies jar and
 - Same product in both colours.
 - Night is split (D-62): olive left blending into maroon right, morning back to cream. Theme is split by side (D-58): left green (olive, sage, Poppins + Lora), right pink (maroon, pink, Inter). Shared elements (header, h1, subtitle) use the green theme.
 
-## 4. Page sections (scroll story: "one scroll = one night's sleep")
+## 4. Page sections (scroll story, Phase 4R, D-79)
 
-1. **Hero** — cream background. 3D jar slowly turning. Logo, "Advanced Sleep Support Formula", jar picker + label toggle.
-2. **Night falls** — background fades cream → split night (olive left, maroon right, soft blend; diagonal on phones). Moon and stars appear.
-3. **Jars open** — both caps lift, gummies float out, later sink back and the caps close (D-59). Native scroll, 900vh sticky stage (D-65).
-4. **Ingredients** (h2) — gummies drift to 3 cards: Melatonin 5 mg, Chamomile, Vitamin B6. Card text = label text only + placeholders.
-5. **Benefits** (h2) — Calm Mind, Restful Sleep, Wake Refreshed appear one by one.
-6. **Morning** — background fades back to cream. Badges: Vegan (Leaf), Gluten Free (WheatOff), Non GMO (FlaskConical). Benefits and badges stay inside the story (D-63). Reduced motion / no WebGL: the same content as normal static sections (D-67).
-7. **About** — plain section, `[PLACEHOLDER]` company text. No 3D.
-8. **Footer** — `[PLACEHOLDER]` contact, socials, FSSAI licence no., disclaimer line (to be confirmed by SAINTWELL).
+One sticky stage, native scroll, 900vh (800vh below 640 px). Everything is a pure function of progress `p`; scrolling up plays it in reverse.
+
+1. **Hero** — cream. Green jar stands, pink jar lies in front (cap right), soft contact shadows, floating gummies. Two-tone `h1` "Restful" (olive) / "Sleep." (maroon) with the label lines under each. Giant faint "SAINTWELL" behind, scroll hints, social icons, "30 GUMMIES · NUTRACEUTICAL".
+2. **Spin and settle** — jars spin slowly, move down and closer; headline fades out.
+3. **Open** — caps unscrew; green gummies rise out of the neck, pink gummies roll out onto the ground.
+4a. **Ingredients** (olive) — one big sage gummy at the centre, rest blurred. Blocks left: Melatonin 5 mg, Chamomile; right: Vitamin B6, "Tasty & easy to take". `h2` eyebrow "INGREDIENTS", step marker "01 INGREDIENTS / 02 BENEFITS".
+4b. **Benefits** (maroon) — pink gummy takes its place. Blocks: Calm Mind, Restful Sleep; Wake Refreshed, "Advanced sleep support formula". `h2` "BENEFITS".
+5. **Return** — gummies go back, caps close, background to dark olive.
+6. **Numbers** (dark olive) — "AT A GLANCE": 5 mg Melatonin, 30 Gummies, "with Chamomile & Vitamin B6", badges Vegan (Leaf), Gluten Free (WheatOff), Non GMO (FlaskConical). Jars faded and dark behind.
+7. **About** + 8. **Footer** — plain sections (Phase 5; stubs with `h2` + `[PLACEHOLDER]` until then).
+
+Block bodies are `[PLACEHOLDER]`. Reduced motion and no WebGL: no canvas; the same content as static sections (D-85). Mobile: see D-82.
 
 Header: wide logo on desktop, stacked logo on mobile. Loading screen: stacked logo.
 

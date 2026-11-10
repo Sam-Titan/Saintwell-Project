@@ -52,7 +52,7 @@ No backend, Python packages (Blender's built-in Python is fine), uv, Zustand, Re
 ## Brand rules
 
 - Source of truth: `brand/SAINTWELL.pdf` (9 pages). Page map is in SPEC.md.
-- Use ONLY the colours and fonts in SPEC.md. No new colours.
+- Use ONLY the colours and fonts in SPEC.md. No new colours (the one approved exception is dark olive `#2E3723`, D-81, already in SPEC).
 - **All site text lives in `src/content/copy.ts`.**
 - **Never write health claims.** Use only text printed on the label. No "cures", "treats", "insomnia", "clinically proven", dosage advice, or anything not on the pack. Unknown text = placeholder marked `[PLACEHOLDER]`.
 - Follow FSSAI nutraceutical rules (India): no disease-cure claims.
