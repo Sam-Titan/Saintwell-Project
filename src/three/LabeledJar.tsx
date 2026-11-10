@@ -12,9 +12,11 @@ import { applyLabelFit, createLabelMask, labelBandSize } from "./labelFit";
 import { jarColours, labelUrl } from "./looks";
 import { isPoster } from "./mode";
 import { timelineAt } from "./sceneTime";
+import { smooth } from "./storyTimeline";
 
 /** How far the cap rises when the jar is fully open (jar units). */
 const CAP_LIFT = 1.3;
+const IDENTITY = new THREE.Quaternion();
 
 import { asset } from "../assetUrl";
 import { Jar } from "./models/Jar";
@@ -29,9 +31,14 @@ type Props = {
 	progress?: MotionValue<number>;
 	/** Extra cap movement at full lift, in the jar's own frame (the lying jar lifts its cap up and away). */
 	capOffset?: readonly [number, number, number];
-	/** Where the cap waits in 4a/4b, in the jar's own frame (absolute); it moves there with `aside` and shrinks. */
-	capStash?: readonly [number, number, number];
-	capStashScale?: number;
+	/** Where the cap rests on the ground (D-109): origin relative to the jar's origin, world orientation, size factor. */
+	capGround?: {
+		pos: readonly [number, number, number];
+		quat: THREE.Quaternion;
+		scale: number;
+	};
+	/** The jar's own frame in world axes (the lying pink jar is turned); identity for the standing one. */
+	frame?: THREE.Quaternion;
 	/** Colour behind the (transparent) canvas, used as the transmission background of the frosted jar. */
 	behind?: THREE.Color;
 } & Omit<React.JSX.IntrinsicElements["group"], "ref">;
@@ -48,8 +55,8 @@ export function LabeledJar({
 	progress,
 	behind,
 	capOffset = [0, 0, 0],
-	capStash,
-	capStashScale = 0.62,
+	capGround,
+	frame,
 	...props
 }: Props) {
 	const group = useRef<THREE.Group>(null);
@@ -102,23 +109,61 @@ export function LabeledJar({
 		};
 	}, [mask]);
 
-	// Cap unscrews and lifts with the story, with a small wobble on the way.
+	// Cap unscrews and lifts with the story, then settles on the ground beside the jar (D-109) and, at the end,
+	// comes back up and screws on. Hover and rest are blended in world axes, then turned into the jar's frame.
+	const tmp = useMemo(
+		() => ({
+			hover: new THREE.Vector3(),
+			rest: new THREE.Vector3(),
+			pos: new THREE.Vector3(),
+			qh: new THREE.Quaternion(),
+			qw: new THREE.Quaternion(),
+			e: new THREE.Euler(),
+			inv: new THREE.Quaternion(),
+		}),
+		[],
+	);
 	useFrame(() => {
 		const c = cap.current;
 		if (!c || !progress) return;
 		const t = timelineAt(progress.get());
 		const lift = t.capLift;
-		const a = capStash ? t.aside : 0;
-		const lx = capOffset[0] * lift;
-		const ly = c.baseY + CAP_LIFT * lift + capOffset[1] * lift;
-		const lz = capOffset[2] * lift;
-		c.mesh.position.set(
-			lx + ((capStash?.[0] ?? lx) - lx) * a,
-			ly + ((capStash?.[1] ?? ly) - ly) * a,
-			lz + ((capStash?.[2] ?? lz) - lz) * a,
+		const f = frame ?? IDENTITY;
+		// hover pose, in the jar's frame
+		tmp.hover.set(
+			capOffset[0] * lift,
+			c.baseY + CAP_LIFT * lift + capOffset[1] * lift,
+			capOffset[2] * lift,
 		);
-		c.mesh.scale.setScalar(c.baseScale * (1 + (capStashScale - 1) * a));
-		c.mesh.rotation.set(t.wobble, Math.PI * lift, t.wobble * 0.7);
+		tmp.e.set(t.wobble, Math.PI * lift, t.wobble * 0.7);
+		tmp.qh.setFromEuler(tmp.e);
+		const down = capGround ? t.capDown : 0;
+		if (capGround && down > 0) {
+			// to world axes: slide sideways first, then drop (gravity: ease in), turn over on the way
+			tmp.hover.applyQuaternion(f);
+			tmp.rest.set(...capGround.pos);
+			const h = smooth(0, 0.7, down);
+			const v = down * down;
+			tmp.pos.set(
+				tmp.hover.x + (tmp.rest.x - tmp.hover.x) * h,
+				tmp.hover.y + (tmp.rest.y - tmp.hover.y) * v,
+				tmp.hover.z + (tmp.rest.z - tmp.hover.z) * h,
+			);
+			tmp.qw
+				.copy(f)
+				.multiply(tmp.qh)
+				.slerp(capGround.quat, smooth(0, 1, down));
+			tmp.inv.copy(f).invert();
+			tmp.pos.applyQuaternion(tmp.inv);
+			tmp.qh.copy(tmp.inv).multiply(tmp.qw);
+			c.mesh.position.copy(tmp.pos);
+			c.mesh.quaternion.copy(tmp.qh);
+			c.mesh.scale.setScalar(c.baseScale * (1 + (capGround.scale - 1) * down));
+		} else {
+			c.mesh.position.copy(tmp.hover);
+			c.mesh.quaternion.copy(tmp.qh);
+			c.mesh.scale.setScalar(c.baseScale);
+		}
 	});
 
 	// Body material follows the jar colour and tier.

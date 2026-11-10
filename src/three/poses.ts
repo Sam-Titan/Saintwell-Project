@@ -127,22 +127,42 @@ export const TEXT_COLUMN = {
 	right: [0.617, 0.917],
 } as const;
 
-/**
- * Where the caps wait in 4a/4b: tucked right behind the hero gummy (it hides them), inside the clear centre band, small.
- * World positions (settled jars).
- */
-export const CAP_STASH: Record<"green" | "pink", Triple> = {
-	green: [0.0, 2.2, -2.0],
-	pink: [0.45, 2.4, -2.4],
-};
-export const CAP_STASH_SCALE = 0.62;
+/** The pink jar lies on its side: its own frame is turned -90 degrees about z (cap end towards +x). */
+export const PINK_FRAME = new THREE.Quaternion().setFromEuler(
+	new THREE.Euler(0, 0, -Math.PI / 2),
+);
 
-/** Stash position in the jar's own frame (the pink jar lies: its local y runs along world +x, local x is world -y). */
-export function capStashLocal(layout: Layout, which: "green" | "pink"): Triple {
+/**
+ * Where each cap rests once it is off (D-109): upside down on the ground beside its jar (open side up, so it reads as
+ * a cap), in front and low, below the 4a/4b text rows. World position of the cap's middle on the ground (x, z), turn
+ * about the vertical, size factor. Green: left of the green jar. Pink: next to the pink jar's mouth.
+ */
+export const CAP_GROUND: Record<
+	Layout,
+	Record<"green" | "pink", { x: number; z: number; yaw: number; scale: number }>
+> = {
+	desktop: {
+		green: { x: -3.3, z: 2.3, yaw: 0.4, scale: 0.7 },
+		pink: { x: 2.9, z: 2.5, yaw: -0.3, scale: 0.75 },
+	},
+	mobile: {
+		green: { x: -1.9, z: 2.4, yaw: 0.4, scale: 0.55 },
+		pink: { x: -0.75, z: 3.3, yaw: -0.3, scale: 0.55 },
+	},
+};
+/** Height of the cap model (jar units, bottom ring to top). */
+export const CAP_HEIGHT = 0.55;
+export const CAP_RADIUS = 0.93;
+
+/** The resting cap: position of the model origin relative to its jar's origin, world orientation, size factor. */
+export function capGround(layout: Layout, which: "green" | "pink") {
+	const g = CAP_GROUND[layout][which];
 	const u = unitPosition(layout, which, 1);
-	const w = CAP_STASH[which];
-	const d: Triple = [w[0] - u[0], w[1] - u[1], w[2] - u[2]];
-	return which === "green" ? d : [-d[1], d[0], d[2]];
+	const q = new THREE.Quaternion().setFromEuler(
+		new THREE.Euler(Math.PI, g.yaw, 0, "YXZ"),
+	);
+	const pos: Triple = [g.x - u[0], CAP_HEIGHT * g.scale - u[1], g.z - u[2]];
+	return { pos, quat: q, scale: g.scale };
 }
 
 /**

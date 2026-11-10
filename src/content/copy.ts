@@ -25,6 +25,10 @@ export const copy = {
 			green: "SAINTWELL Melatonin Gummies, green jar",
 			pink: "SAINTWELL Melatonin Gummies, pink jar",
 		},
+		gummyAlt: {
+			green: "A green SAINTWELL Melatonin gummy",
+			pink: "A pink SAINTWELL Melatonin gummy",
+		},
 		logoAlt: "SAINTWELL",
 	},
 	nav: [

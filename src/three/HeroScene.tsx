@@ -14,18 +14,17 @@ import * as THREE from "three";
 import { copy } from "../content/copy";
 import { type Tier, tierSettings } from "../hooks/useDeviceTier";
 import { FpsMeter } from "./FpsMeter";
-import { Ambient, Gummies } from "./Gummies";
-import { HeroGummy, type HeroState } from "./HeroGummy";
+import { Gummies } from "./Gummies";
+import { HeroGummy } from "./HeroGummy";
 import { LabeledJar } from "./LabeledJar";
 import { isPoster } from "./mode";
 import {
-	AMBIENT,
-	CAP_STASH_SCALE,
 	cameraFor,
-	capStashLocal,
+	capGround,
 	FOV,
 	HERO_RAISE,
 	type Layout,
+	PINK_FRAME,
 	unitPosition,
 } from "./poses";
 import { Studio } from "./Studio";
@@ -34,9 +33,6 @@ import { backgroundAt, rgbCss } from "./storyTimeline";
 import { WordPlane } from "./WordPlane";
 
 export type { Layout };
-
-// Bloom + depth of field: own chunk, fetched on the high tier only (D-84)
-const Fx = lazy(() => import("./Fx"));
 
 // r3f-perf is a dev tool only (D-99): never part of the production build
 const Perf = import.meta.env.DEV
@@ -58,38 +54,15 @@ function FitCamera({ layout }: { layout: Layout }) {
 	return null;
 }
 
-/** Sets an opacity on every material under `group` (remembering the original). */
-function setOpacity(group: THREE.Object3D, k: number) {
-	group.traverse((o) => {
-		const mesh = o as THREE.Mesh;
-		const mats = mesh.material
-			? Array.isArray(mesh.material)
-				? mesh.material
-				: [mesh.material]
-			: [];
-		for (const m of mats) {
-			const ud = m.userData as { o0?: number; t0?: boolean };
-			if (ud.o0 === undefined) {
-				ud.o0 = m.opacity;
-				ud.t0 = m.transparent;
-			}
-			m.transparent = k < 0.999 ? true : (ud.t0 ?? false);
-			m.opacity = ud.o0 * k;
-		}
-	});
-}
-
 /** Both jars, their gummies, the ground shadow and the hero gummies. One useFrame moves the units. */
 function Scene({
 	tier,
 	progress,
 	layout,
-	hero,
 }: {
 	tier: Exclude<Tier, "none">;
 	progress: MotionValue<number>;
 	layout: Layout;
-	hero: HeroState;
 }) {
 	const s = tierSettings(tier);
 	const poster = useMemo(isPoster, []);
@@ -98,7 +71,6 @@ function Scene({
 	const greenSpin = useRef<THREE.Group>(null);
 	const pink = useRef<THREE.Group>(null);
 	const pinkRoll = useRef<THREE.Group>(null);
-	const fadeLast = useRef(-1);
 	// the scene draws its own background (D-94): colour from backgroundAt(p), updated every frame.
 	// It is also what the frosted jar sees through its glass (the D-51 fix).
 	const behind = useMemo(() => new THREE.Color(), []);
@@ -109,10 +81,10 @@ function Scene({
 			scene.background = null;
 		};
 	}, [scene, behind, progress]);
-	const capStash = useMemo(
+	const caps = useMemo(
 		() => ({
-			green: capStashLocal(layout, "green"),
-			pink: capStashLocal(layout, "pink"),
+			green: capGround(layout, "green"),
+			pink: capGround(layout, "pink"),
 		}),
 		[layout],
 	);
@@ -140,19 +112,6 @@ function Scene({
 		const time = poster ? 0 : clock.elapsedTime;
 		gs.rotation.y = Math.sin(time * 0.45) * 0.25 * tl.spin;
 		pr.rotation.x = Math.sin(time * 0.5 + 1) * 0.25 * tl.spin;
-		// while a hero gummy has the stage the rest fades (and, on the low tier, shrinks and moves back)
-		const f = tl.focus;
-		if (Math.abs(f - fadeLast.current) > 0.004) {
-			fadeLast.current = f;
-			const k = 1 - (tier === "high" ? 0.3 : 0.6) * f;
-			setOpacity(g, k);
-			setOpacity(pk, k);
-			if (tier !== "high") {
-				g.scale.setScalar(1 - 0.18 * f);
-				pk.scale.setScalar(1 - 0.18 * f);
-			}
-		}
-		hero.amount = 0;
 		// the view starts raised, so the jars sit lower under the headline; it settles with the jars (D-96)
 		const cam = state.camera as THREE.PerspectiveCamera;
 		const c = cameraFor(
@@ -174,7 +133,6 @@ function Scene({
 	});
 
 	const crowd = s.gummyCount;
-	const shrink = tier === "high" ? 0 : 0.3;
 	return (
 		<>
 			{/* the giant faint SAINTWELL word, drawn in the scene (D-94) */}
@@ -199,17 +157,17 @@ function Scene({
 						textureSize={s.textureSize}
 						transmission={false}
 						progress={progress}
-						capStash={capStash.green}
-						capStashScale={CAP_STASH_SCALE}
-					/>
-					<Gummies
-						colour="green"
-						count={crowd}
-						progress={progress}
-						seed={7}
-						shrink={shrink}
+						capGround={caps.green}
 					/>
 				</group>
+				{/* outside the sway group: the floating gummies must not swing with the jar */}
+				<Gummies
+					colour="green"
+					count={crowd}
+					layout={layout}
+					progress={progress}
+					seed={7}
+				/>
 			</group>
 
 			<group ref={pink}>
@@ -224,42 +182,56 @@ function Scene({
 							progress={progress}
 							behind={behind}
 							capOffset={[-1.1, 0, 0]}
-							capStash={capStash.pink}
-							capStashScale={CAP_STASH_SCALE}
+							capGround={caps.pink}
+							frame={PINK_FRAME}
 						/>
 					</group>
 				</group>
 				<Gummies
 					colour="pink"
 					count={crowd}
+					layout={layout}
 					progress={progress}
 					seed={21}
-					shrink={shrink}
 				/>
 			</group>
 
-			<Ambient
-				colour="green"
-				spots={AMBIENT[layout].green}
-				progress={progress}
-			/>
-			<Ambient colour="pink" spots={AMBIENT[layout].pink} progress={progress} />
 			<HeroGummy
 				colour="green"
 				tier={tier}
 				layout={layout}
 				progress={progress}
-				state={hero}
 			/>
 			<HeroGummy
 				colour="pink"
 				tier={tier}
 				layout={layout}
 				progress={progress}
-				state={hero}
 			/>
 		</>
 	);
+}
+
+/** While the canvas is held (demand mode): redraw when the scroll moves and on a slow timer (the blurred bob). */
+function HeldPulse({
+	held,
+	progress,
+}: {
+	held: boolean;
+	progress: MotionValue<number>;
+}) {
+	const invalidate = useThree((s) => s.invalidate);
+	useEffect(() => {
+		if (!held) return;
+		const id = window.setInterval(invalidate, 125);
+		const off = progress.on("change", () => invalidate());
+		invalidate();
+		return () => {
+			window.clearInterval(id);
+			off();
+		};
+	}, [held, progress, invalidate]);
+	return null;
 }
 
 /** Tells the page the first frame has been drawn (the poster can fade out). */
@@ -292,29 +264,23 @@ export default function HeroScene({
 	/** called once, after the first frames are drawn */
 	onReady?: () => void;
 }) {
-	const hero = useMemo<HeroState>(
-		() => ({ target: new THREE.Vector3(0, 2, 0), amount: 0 }),
-		[],
-	);
 	const s = tierSettings(tier);
 	const poster = useMemo(isPoster, []);
-	const [fx, setFx] = useState(false);
-	// effects (high tier): fetched and compiled at idle, then they stay mounted (D-97)
+	// while a hero gummy has the stage the canvas is blurred (CSS) and only redrawn about 8 times a second (D-108)
+	const [held, setHeld] = useState(false);
 	useEffect(() => {
-		if (tier !== "high") return;
-		const ric =
-			window.requestIdleCallback ??
-			((cb: () => void) => window.setTimeout(cb, 600));
-		const id = ric(() => setFx(true));
-		return () => {
-			if (window.cancelIdleCallback) window.cancelIdleCallback(id as number);
+		const check = (p: number) => {
+			const f = timelineAt(p).focus;
+			setHeld((h) => (h ? f > 0.995 : f >= 0.999));
 		};
-	}, [tier]);
+		check(progress.get());
+		return progress.on("change", check);
+	}, [progress]);
 	return (
 		<Canvas
 			className="h-full w-full"
 			dpr={poster ? [2, 2] : s.dpr}
-			frameloop={active ? "always" : "never"}
+			frameloop={active ? (held && !poster ? "demand" : "always") : "never"}
 			camera={{ position: [0, 3, 12], fov: FOV }}
 			gl={{ antialias: tier === "high", alpha: false }}
 			// the scene draws its own background; render targets (contact shadows) must clear to transparent
@@ -325,14 +291,10 @@ export default function HeroScene({
 			<FitCamera layout={layout} />
 			<Studio />
 			<Suspense fallback={null}>
-				<Scene tier={tier} progress={progress} layout={layout} hero={hero} />
+				<Scene tier={tier} progress={progress} layout={layout} />
 				{onReady && <ReadySignal onReady={onReady} />}
 			</Suspense>
-			{tier === "high" && fx && (
-				<Suspense fallback={null}>
-					<Fx progress={progress} hero={hero} />
-				</Suspense>
-			)}
+			<HeldPulse held={held} progress={progress} />
 			{!poster && new URLSearchParams(window.location.search).has("fps") && (
 				<FpsMeter progress={progress} />
 			)}

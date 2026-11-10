@@ -1,6 +1,7 @@
 import type { MotionValue } from "motion/react";
 import { copy } from "../content/copy";
 import Reveal from "./Reveal";
+import StillGummy from "./StillGummy";
 
 type Which = "ingredients" | "benefits";
 
@@ -84,6 +85,7 @@ export default function SceneBlocks({
 				<h2 id={`${c.id}-h`} className={`${eyebrowClass} mb-10`}>
 					{c.eyebrow}
 				</h2>
+				<StillGummy colour={which === "ingredients" ? "green" : "pink"} />
 				<div className="mx-auto grid max-w-5xl gap-x-12 gap-y-10 sm:grid-cols-2">
 					{c.blocks.map((b, i) => (
 						<div key={b.title} className={i % 2 === 1 ? "sm:text-right" : ""}>

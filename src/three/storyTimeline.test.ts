@@ -242,3 +242,19 @@ describe("gummies", () => {
 		);
 	});
 });
+
+describe("caps settle on the ground and come back (D-109)", () => {
+	it("up, down on the ground, then up again before the cap screws on; closed at both ends", () => {
+		expect(timeline(0).capLift).toBe(0);
+		expect(timeline(0).capDown).toBe(0);
+		expect(timeline(0.1).capLift).toBeGreaterThan(0.5);
+		expect(timeline(0.1).capDown).toBeLessThan(0.5);
+		for (const p of [0.2, 0.3, 0.45, 0.6]) expect(timeline(p).capDown).toBe(1);
+		expect(timeline(0.67).capDown).toBeGreaterThan(0);
+		expect(timeline(0.67).capDown).toBeLessThan(1);
+		expect(timeline(0.72).capDown).toBe(0);
+		expect(timeline(0.72).capLift).toBeGreaterThan(0);
+		expect(timeline(1).capLift).toBe(0);
+		expect(timeline(1).capDown).toBe(0);
+	});
+});

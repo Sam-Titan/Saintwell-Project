@@ -83,8 +83,8 @@ export type Timeline = {
 	spin: number;
 	/** 0 closed .. 1 cap fully lifted */
 	capLift: number;
-	/** 0 caps hover over their jars .. 1 caps tucked in the centre band behind the hero gummy (4a/4b, D-101) */
-	aside: number;
+	/** 0 caps hover over their jars .. 1 caps lie on the ground beside them (D-109) */
+	capDown: number;
 	/** small cap wobble while it unscrews (radians-ish, signed) */
 	wobble: number;
 	/** 0 gummies inside .. 1 green gummies floating outside */
@@ -141,7 +141,7 @@ export function timeline(p: number): Timeline {
 		settle: easeOutBack(x / 0.07),
 		spin: clamp01(1 - smooth(0.02, 0.08, x)),
 		capLift,
-		aside: pulse(0.2, 0.28, 0.62, 0.7, x),
+		capDown: pulse(0.12, 0.2, 0.64, 0.7, x),
 		wobble:
 			Math.sin(capLift * Math.PI * 5) * 0.05 * Math.sin(capLift * Math.PI),
 		greenOut: pulse(0.08, 0.2, 0.66, 0.74, x),

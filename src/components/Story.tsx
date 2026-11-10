@@ -4,6 +4,7 @@ import {
 	useMotionValueEvent,
 	useScroll,
 	useSpring,
+	useTransform,
 } from "motion/react";
 import {
 	lazy,
@@ -20,7 +21,8 @@ import { useJar } from "../theme/JarContext";
 import { isPoster } from "../three/mode";
 import type { Layout } from "../three/poses";
 import { PROGRESS_SPRING } from "../three/smoothing";
-import { ANCHORS } from "../three/storyTimeline";
+import { ANCHORS, timeline } from "../three/storyTimeline";
+import HeroSprite from "./HeroSprite";
 import HeroText from "./HeroText";
 import Numbers from "./Numbers";
 import SceneBlocks from "./SceneBlocks";
@@ -98,6 +100,14 @@ export default function Story() {
 		return () => window.removeEventListener("load", start);
 	}, [load3d]);
 	const show3d = ready && scrolled;
+	// behind a hero gummy the 3D is blurred and a little darker (D-108); the canvas also slows down (HeroScene)
+	const blurPx = layout === "mobile" ? 6 : 9;
+	const filter = useTransform(progress, (p) => {
+		const f = timeline(p).focus;
+		return f < 0.01
+			? "none"
+			: `blur(${(blurPx * f).toFixed(1)}px) brightness(${(1 - 0.14 * f).toFixed(3)})`;
+	});
 
 	// start loading the labels at once; dynamic import keeps three/drei out of the main bundle
 	useEffect(() => {
@@ -139,6 +149,7 @@ export default function Story() {
 						<motion.div
 							initial={false}
 							animate={{ opacity: show3d || poster ? 1 : 0 }}
+							style={poster ? undefined : { filter }}
 							transition={{ duration: 0.35 }}
 							aria-hidden={!(show3d || poster)}
 							data-hero-3d
@@ -154,6 +165,23 @@ export default function Story() {
 								/>
 							</Suspense>
 						</motion.div>
+					)}
+					{/* the pre-rendered hero gummy (D-106): loads once the 3D is ready, fails soft if the files are missing */}
+					{!poster && (
+						<>
+							<HeroSprite
+								colour="green"
+								layout={layout}
+								progress={progress}
+								enabled={ready}
+							/>
+							<HeroSprite
+								colour="pink"
+								layout={layout}
+								progress={progress}
+								enabled={ready}
+							/>
+						</>
 					)}
 					{/* poster mode (`just poster`): the scene alone, no page text over it */}
 					{!poster && (
