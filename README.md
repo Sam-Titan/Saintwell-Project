@@ -9,8 +9,8 @@ One-page brand site with a 3D Melatonin Gummies jar.
 3. `pnpm install`
 4. `pnpm exec lefthook install`
 5. `pnpm exec playwright install chromium`
-6. Blender 4.2.7 LTS: download the Linux tarball from blender.org and unpack it in your home folder (no sudo, snap or apt). Then tell `just` where it is:
-   `export BLENDER=$HOME/blender/blender` (default: `blender` on PATH)
+6. Blender 5.2.3 LTS: download the Linux tarball from blender.org and unpack it in your home folder (no sudo, snap or apt). Then tell `just` where it is:
+   `export BLENDER=$HOME/blender-5.2.3/blender` (default: `blender` on PATH)
 
 ## Commands
 

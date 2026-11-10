@@ -14,3 +14,4 @@ Not in V1. Add ideas here instead of building them. Sam decides what moves into 
 | 8   | Photo-real models / baked lighting            | Needs a GPU machine                 |
 | 9   | FAQ section                                   | Copy must come from SAINTWELL       |
 | 10  | Real ingredient descriptions                  | Approved copy from SAINTWELL        |
+| 11  | Recheck THREE.Clock deprecation warning on r3f update | Warning comes from @react-three/fiber 9.8.2 |

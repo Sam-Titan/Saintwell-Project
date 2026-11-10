@@ -1,4 +1,4 @@
-"""Build one soft rounded gummy (low poly, ~320 triangles). Drawn many times with instancing.
+"""Build one soft rounded gummy (low poly, 80 triangles). Drawn many times with instancing.
 
 Run headless:  blender -b --factory-startup --python blender/build_gummy.py -- blender/out/gummy.glb
 
@@ -36,7 +36,6 @@ def main():
     bpy.context.collection.objects.link(obj)
 
     m = bpy.data.materials.new("gummy")
-    m.use_nodes = True
     bsdf = m.node_tree.nodes["Principled BSDF"]
     bsdf.inputs["Base Color"].default_value = SAGE
     bsdf.inputs["Roughness"].default_value = 0.35

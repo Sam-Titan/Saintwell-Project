@@ -4,7 +4,7 @@ Claude Code: add a new entry at the TOP at the end of every session. Keep it sho
 
 ## Current state
 
-- Phase: **2 — 3D models**, built, waiting for Sam's approval (see `git log origin/main..main`)
+- Phase: **2 — 3D models**, review fixes done, waiting for Sam's approval (see `git log origin/main..main`)
 - Branch: `main` (only branch)
 - Blockers: none
 
@@ -12,10 +12,22 @@ Claude Code: add a new entry at the TOP at the end of every session. Keep it sho
 
 ## Session log
 
+### 2026-11-10 — Phase 2 review fixes
+**Done**
+- Blender upgraded to **5.2.3 LTS** (tarball, sha256 checked, `~/blender-5.2.3`, `$BLENDER`). D-46 replaces D-41. Only API change: dropped deprecated `Material.use_nodes`. `just models` output is **byte-identical** to the 4.2.7 build: same triangles, bounding boxes, 48 KB total. Label fit tests unchanged and pass.
+- `@types/three` added to CLAUDE.md approved tools (D-47). Jar proportions unchanged. BACKLOG #11: recheck THREE.Clock warning on r3f update.
+- Correction: the gummy has **80 triangles**, not 320 as I wrote earlier (icosphere subdivision 2 = 80 faces). Geometry unchanged; docs fixed.
+- Screenshot: `.playwright-mcp/phase2-looks-v2.png`. `just check` and `just test` pass.
+
+**Next**
+- Sam: approve, push. Then Phase 3.
+
+---
+
 ### 2026-11-10 — Phase 2
 **Done**
 - Blender 4.2.7 LTS (tarball in `~/blender`) logged as D-41; `just models` uses `$BLENDER` (README example).
-- `blender/build_jar.py`: Body (open neck, wall thickness, rounded bottom edge), Cap (separate, white, 48 ridges), Label (separate band, own material, UVs). `blender/build_gummy.py`: one low-poly pillow gummy (320 triangles).
+- `blender/build_jar.py`: Body (open neck, wall thickness, rounded bottom edge), Cap (separate, white, 48 ridges), Label (separate band, own material, UVs). `blender/build_gummy.py`: one low-poly pillow gummy (80 triangles).
 - `just models`: Blender → .glb → gltf-transform (meshopt) → gltfjsx → `src/three/models/{Jar,Gummy}.tsx`. Total models **48 KB** (budget 2 MB).
 - Label fit (`src/three/labelFit.ts`, unit tested): band height fixed, label centred at front, never stretched. pink-b covers 95 % of the circle, green-a 75 %. Uncovered part is at the back and the jar shows through.
 - `LabeledJar` (own materials per jar), `Gummies` (InstancedMesh), temporary 4-look viewer `JarLookViewer` on the test page (front + back).

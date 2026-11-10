@@ -81,7 +81,6 @@ def lathe(name, profile, segments, ridge=None):
 
 def material(name, colour, roughness):
     m = bpy.data.materials.new(name)
-    m.use_nodes = True
     bsdf = m.node_tree.nodes["Principled BSDF"]
     bsdf.inputs["Base Color"].default_value = colour
     bsdf.inputs["Roughness"].default_value = roughness
