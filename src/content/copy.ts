@@ -27,6 +27,11 @@ export const copy = {
 		},
 		logoAlt: "SAINTWELL",
 	},
+	sections: {
+		ingredients: "Ingredients",
+		benefits: "Benefits",
+		badges: "Product badges",
+	},
 	badges: ["Vegan", "Gluten Free", "Non GMO"],
 	benefits: ["Calm Mind", "Restful Sleep", "Wake Refreshed"],
 	ingredients: [

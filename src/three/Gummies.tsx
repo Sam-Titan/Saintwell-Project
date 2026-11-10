@@ -5,18 +5,10 @@ import { useCallback, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import type { JarColour } from "../theme/tokens";
 import { jarColours } from "./looks";
+import { rng } from "./random";
 import { gummyPath, gummyProgress, timeline, type Vec3 } from "./storyTimeline";
 
 type GummyGLTF = { nodes: { Gummy: THREE.Mesh } };
-
-/** Fixed pseudo-random numbers (same layout every load). */
-function rng(seed: number) {
-	let s = seed;
-	return () => {
-		s = (s * 1664525 + 1013904223) % 4294967296;
-		return s / 4294967296;
-	};
-}
 
 type Gummy = {
 	rest: Vec3;

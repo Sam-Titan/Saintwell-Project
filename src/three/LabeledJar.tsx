@@ -25,6 +25,8 @@ type Props = {
 	transmission?: boolean;
 	/** Story scroll progress: lifts and turns the cap (D-59). Undefined = cap stays closed. */
 	progress?: MotionValue<number>;
+	/** Colour behind the (transparent) canvas, used as the transmission background of the frosted jar. */
+	behind?: THREE.Color;
 } & Omit<React.JSX.IntrinsicElements["group"], "ref">;
 
 /**
@@ -37,6 +39,7 @@ export function LabeledJar({
 	textureSize = 2048,
 	transmission = false,
 	progress,
+	behind,
 	...props
 }: Props) {
 	const group = useRef<THREE.Group>(null);
@@ -150,6 +153,7 @@ export function LabeledJar({
 						anisotropicBlur={0.05}
 						distortion={0}
 						backside={false}
+						background={behind}
 					/>
 				</mesh>
 			)}

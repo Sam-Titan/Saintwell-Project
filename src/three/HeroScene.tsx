@@ -2,12 +2,13 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import type { MotionValue } from "motion/react";
 import { Perf } from "r3f-perf";
 import { Suspense, useLayoutEffect, useRef } from "react";
-import type * as THREE from "three";
+import * as THREE from "three";
 import { copy } from "../content/copy";
 import { type Tier, tierSettings } from "../hooks/useDeviceTier";
 import { Gummies } from "./Gummies";
 import { LabeledJar } from "./LabeledJar";
 import { jars } from "./looks";
+import { Sky } from "./Sky";
 import { Studio } from "./Studio";
 import { timeline } from "./storyTimeline";
 
@@ -49,13 +50,32 @@ function FitCamera({ layout }: { layout: Layout }) {
 	return null;
 }
 
+const CREAM = new THREE.Color("#f8f5ec");
+const MAROON = new THREE.Color("#6a1f2b");
+
+/**
+ * The canvas is transparent (night is CSS, D-64), so the frosted pink jar needs to know what is
+ * behind it: this colour goes from cream to maroon with `night` and is used as the transmission
+ * background (D-51: a transparent canvas alone made the glass speckled black).
+ */
+function useBehindColour(progress?: MotionValue<number>) {
+	const colour = useRef(new THREE.Color(CREAM)).current;
+	useFrame(() => {
+		const night = progress ? timeline(progress.get()).night : 0;
+		colour.copy(CREAM).lerp(MAROON, night);
+	});
+	return colour;
+}
+
 function JarUnit({
 	index,
 	position,
 	tier,
 	progress,
+	behind,
 }: {
 	index: number;
+	behind: THREE.Color;
 	position: readonly [number, number, number];
 	tier: Exclude<Tier, "none">;
 	/** undefined = still jar (reduced motion) */
@@ -82,6 +102,7 @@ function JarUnit({
 					label={look.label}
 					textureSize={s.textureSize}
 					transmission={s.transmission}
+					behind={behind}
 					progress={progress}
 				/>
 				<Gummies
@@ -95,11 +116,37 @@ function JarUnit({
 	);
 }
 
+function Jars({
+	layout,
+	tier,
+	progress,
+}: {
+	layout: Layout;
+	tier: Exclude<Tier, "none">;
+	progress?: MotionValue<number>;
+}) {
+	const behind = useBehindColour(progress);
+	return POSITIONS[layout].map((pos, i) => (
+		<JarUnit
+			// biome-ignore lint/suspicious/noArrayIndexKey: two fixed jars
+			key={i}
+			index={i}
+			position={pos}
+			tier={tier}
+			progress={progress}
+			behind={behind}
+		/>
+	));
+}
+
 export default function HeroScene({
 	tier,
 	progress,
 	layout,
+	active = true,
 }: {
+	/** false = stage is off screen: stop rendering (D-71) */
+	active?: boolean;
 	tier: Exclude<Tier, "none">;
 	/** undefined = still (reduced motion) */
 	progress?: MotionValue<number>;
@@ -110,27 +157,17 @@ export default function HeroScene({
 		<Canvas
 			className="h-full w-full"
 			dpr={s.dpr}
-			frameloop={progress ? "always" : "demand"}
+			frameloop={progress ? (active ? "always" : "never") : "demand"}
 			camera={{ position: [0, 0.5, 12], fov: FOV }}
-			gl={{ antialias: tier === "high" }}
+			gl={{ antialias: tier === "high", alpha: true }}
 			role="img"
 			aria-label={copy.ui.canvasDescription}
 		>
-			{/* real cream background (not transparent): the frosted jar blends what is behind it */}
-			<color attach="background" args={["#f8f5ec"]} />
 			<FitCamera layout={layout} />
 			<Studio />
+			{progress && <Sky progress={progress} tier={tier} />}
 			<Suspense fallback={null}>
-				{POSITIONS[layout].map((pos, i) => (
-					<JarUnit
-						// biome-ignore lint/suspicious/noArrayIndexKey: two fixed jars
-						key={i}
-						index={i}
-						position={pos}
-						tier={tier}
-						progress={progress}
-					/>
-				))}
+				<Jars layout={layout} tier={tier} progress={progress} />
 			</Suspense>
 			{import.meta.env.DEV && <Perf position="bottom-left" minimal />}
 		</Canvas>

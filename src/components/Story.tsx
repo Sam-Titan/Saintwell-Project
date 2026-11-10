@@ -1,5 +1,6 @@
 import {
 	motion,
+	useInView,
 	useMotionValueEvent,
 	useReducedMotion,
 	useScroll,
@@ -14,6 +15,8 @@ import type { Layout } from "../three/HeroScene";
 import { jars } from "../three/looks";
 import { timeline } from "../three/storyTimeline";
 import LoadingScreen from "./LoadingScreen";
+import NightSky from "./NightSky";
+import { Badges, Benefits, Ingredients } from "./StoryPanels";
 
 // three.js is only downloaded when WebGL is available
 const HeroScene = lazy(() => import("../three/HeroScene"));
@@ -24,6 +27,17 @@ function pickLayout(): Layout {
 	if (q === "stagger" || q === "side") return q;
 	// narrow phones: staggered (pink slightly behind and lower) keeps the jars bigger (D-61)
 	return window.matchMedia("(max-width: 639px)").matches ? "stagger" : "side";
+}
+
+/** Same content as the story, as normal sections (reduced motion, no WebGL; D-67). */
+function StaticSections() {
+	return (
+		<>
+			<Ingredients />
+			<Benefits />
+			<Badges />
+		</>
+	);
 }
 
 function Headline() {
@@ -41,6 +55,8 @@ export default function Story() {
 	const reduce = useReducedMotion() ?? false;
 	const wrap = useRef<HTMLElement>(null);
 	const layout = pickLayout();
+	// stop rendering once the story has scrolled away (D-71)
+	const onScreen = useInView(wrap, { margin: "100px" });
 
 	// native scroll -> progress, smoothed so keyboard jumps (PageDown, Space) still feel steady
 	const { scrollYProgress } = useScroll({
@@ -81,6 +97,7 @@ export default function Story() {
 						/>
 					))}
 				</div>
+				<StaticSections />
 			</main>
 		);
 	}
@@ -90,14 +107,16 @@ export default function Story() {
 			<section
 				ref={wrap}
 				data-story-progress="0.000"
-				className={reduce ? "relative h-screen" : "relative h-[500vh]"}
+				className={reduce ? "relative h-screen" : "relative h-[900vh]"}
 			>
 				<div className="sticky top-0 h-screen overflow-hidden">
+					{!reduce && <NightSky progress={progress} layout={layout} />}
 					<Suspense fallback={null}>
 						<HeroScene
 							tier={tier}
 							progress={reduce ? undefined : progress}
 							layout={layout}
+							active={onScreen}
 						/>
 					</Suspense>
 					<motion.div
@@ -106,11 +125,19 @@ export default function Story() {
 					>
 						<Headline />
 					</motion.div>
+					{!reduce && (
+						<>
+							<Ingredients progress={progress} />
+							<Benefits progress={progress} />
+							<Badges progress={progress} />
+						</>
+					)}
 					<div className="pointer-events-none absolute top-[58%] left-1/2 h-[min(46vh,22rem)] w-[min(80vw,26rem)] -translate-x-1/2 -translate-y-1/2">
 						<LoadingScreen />
 					</div>
 				</div>
 			</section>
+			{reduce && <StaticSections />}
 		</main>
 	);
 }
