@@ -9,3 +9,5 @@ playwright-report
 test-results
 .lighthouseci
 .DS_Store
+.claude/settings.local.json
+.playwright-mcp

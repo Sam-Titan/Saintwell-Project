@@ -2,7 +2,7 @@
 	"mcpServers": {
 		"playwright": {
 			"command": "pnpm",
-			"args": ["exec", "playwright-mcp"]
+			"args": ["exec", "playwright-mcp", "--headless"]
 		}
 	}
 }
