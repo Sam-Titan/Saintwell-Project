@@ -6,7 +6,7 @@ Rules:
 - A phase is done when every box is ticked AND Sam approves. Then Sam pushes main.
 - Each phase ends with: `just check` ✅, `just test` ✅, PROGRESS.md updated.
 
-Current phase: **Phase 0 — Setup**
+Current phase: **Phase 1 — Brand assets**
 
 ---
 

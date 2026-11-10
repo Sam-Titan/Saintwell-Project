@@ -4,7 +4,7 @@ Claude Code: add a new entry at the TOP at the end of every session. Keep it sho
 
 ## Current state
 
-- Phase: **0 — Setup** (done, all boxes ticked; awaiting Sam's approval)
+- Phase: **0 — Setup** approved by Sam. Next: **1 — Brand assets** (not started)
 - Branch: `main` (only branch)
 - Blockers: none
 
