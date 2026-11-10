@@ -4,13 +4,36 @@ Claude Code: add a new entry at the TOP at the end of every session. Keep it sho
 
 ## Current state
 
-- Phase: **3 — Hero scene** reworked into two jars + scroll open/close (D-57 to D-61), waiting for Sam's review (see `git log origin/main..main`)
+- Phase: **4 — Scroll story** built, waiting for Sam's review and approval (see `git log origin/main..main`)
 - Branch: `main` (only branch)
 - Blockers: none
 
 ---
 
 ## Session log
+
+### 2026-11-10 — Phase 4 (scroll story)
+**Done** (D-62 to D-73 logged; SPEC and PHASES updated)
+- Timeline (pure, unit tested) now 900vh: night 0.06-0.14, caps 0.12-0.22, gummies out 0.18-0.34, 3 cards 0.31-0.58, 3 benefits 0.58-0.79, gummies sink 0.76-0.84, caps close 0.82-0.88, morning 0.86-0.94, badges 0.90-0.97. Cards and benefits never show together; scroll up plays it in reverse.
+- Split night: two CSS layers behind a transparent canvas (`NightSky.tsx`), wide soft left-to-right blend, diagonal on the phone layout. Frosted pink jar gets the colour behind it as its transmission `background`, so the glass is not black. White text passes AA on olive, maroon and the blend (contrast unit test). Header logo turns white at night (D-73).
+- Moon cropped from PDF page 2 (`public/images/moon.svg` via `just assets`, D-72) + 46 stars. High tier: bloom via `@react-three/postprocessing` (3.2.2, + `postprocessing` 6.39.6, `lucide-react` 1.71.0, all pinned). Low tier: soft sprite, no postprocessing. None / reduced motion: no sky.
+- Ingredients (h2 + 3 cards, `[PLACEHOLDER]` bodies), Benefits (h2 + 3 items), badges (Leaf, WheatOff, FlaskConical). Real HTML in reading order; gummies drift toward the active card.
+- Reduced motion and tier none: same components as normal static sections (no sticky stage). Canvas stops when the story is off screen.
+- Tests: vitest 34 (timeline, contrast), Playwright 20 (each item at its p, night opacity both ways, static modes, h2s, whole story at high tier with no external requests). `just check` and `just test` pass.
+- Screenshots: `.playwright-mcp/phase4-{desktop,mobile}-p{000..100}.png` (11 moments each; low tier), `phase4-{reduced,none}-{desktop,mobile}-full.png`.
+- `just lighthouse` (fallback path, needs `CHROME_PATH` = Playwright headless shell here): Perf 79-87 across runs (was 93; noisy, main bundle only +10 KB, LCP is the fallback jar image), SEO 83 (Phase 5), A11y and BP passed.
+
+**Notes for Sam**
+- **900vh on mobile:** I cannot judge feel on a laptop. By numbers: 8 phone screens of scrolling; each card or benefit gets about 63vh (about 530 px on a phone). I think 750-800vh is enough for phones (about 52vh per item); desktop is fine at 900. Say the word and I change one number.
+- Main bundle is 774 KB because `LoadingScreen` imports drei. Moving it into the lazy 3D chunk would cut the no-WebGL path a lot (Phase 6 candidate; not done, it changes when the loader appears).
+- High tier on this machine is software GL (3 fps): the frosted pink jar looks grainy and the bloom adds a faint haze. Needs a real GPU look in Phase 6. Alpha stays transparent with bloom, so the CSS night shows through.
+- Desktop: tops of the lifted caps touch the top edge at p 0.3-0.5 (frame was fitted in Phase 3); "Ingredients"/"Benefits" headings sit over gummies. Tell me if you want either moved.
+- Sage on olive is 3.6:1: used only for card borders and icons. Card/benefit bodies are white.
+
+**Next**
+- Sam: review screenshots + commits, decide on 900 vs 750-800vh, approve, push. Then Phase 5 (About, footer, SEO, copy check).
+
+---
 
 ### 2026-11-10 — Two jars + scroll open/close
 **Done**

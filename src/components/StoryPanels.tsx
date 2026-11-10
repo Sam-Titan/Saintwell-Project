@@ -72,7 +72,7 @@ function Heading({
 			className={
 				progress
 					? "absolute inset-x-0 top-24 text-center font-bold text-2xl text-white md:text-3xl"
-					: "mb-6 font-bold text-2xl text-olive md:text-3xl"
+					: "mb-6 text-center font-bold text-2xl text-olive md:text-3xl"
 			}
 		>
 			{children}

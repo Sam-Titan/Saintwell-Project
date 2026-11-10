@@ -79,17 +79,17 @@ Goal: first screen works fully.
 Goal: night → morning story works end to end.
 
 - [x] Open/close timeline on native scroll (D-59)
-- [ ] Timeline extended to 900vh: night, cards, benefits, badges (pure, unit tested)
-- [ ] Split night: CSS layers, soft blend, diagonal on phones, AA contrast (D-62, D-64)
-- [ ] Moon + stars (moon cropped from PDF page 2, else code crescent)
-- [ ] Glow via postprocessing on high tier only; low tier sprite; none static
-- [ ] Ingredients: h2 + 3 cards, gummies drift toward them
-- [ ] Benefits: h2 + 3 items one by one
-- [ ] Morning: fade to cream, 3 badges (Leaf, WheatOff, FlaskConical)
-- [ ] Reduced motion + tier none: everything readable as static sections
-- [ ] Canvas stops when the stage is off screen
-- [ ] e2e: text at the right p, static modes, no external requests
-- [ ] Screenshots desktop + mobile stagger; report if 900vh is too long on mobile
+- [x] Timeline extended to 900vh: night, cards, benefits, badges (pure, unit tested)
+- [x] Split night: CSS layers, soft blend, diagonal on phones, AA contrast (D-62, D-64)
+- [x] Moon + stars (moon cropped from PDF page 2, else code crescent)
+- [x] Glow via postprocessing on high tier only; low tier sprite; none static
+- [x] Ingredients: h2 + 3 cards, gummies drift toward them
+- [x] Benefits: h2 + 3 items one by one
+- [x] Morning: fade to cream, 3 badges (Leaf, WheatOff, FlaskConical)
+- [x] Reduced motion + tier none: everything readable as static sections
+- [x] Canvas stops when the stage is off screen
+- [x] e2e: text at the right p, static modes, no external requests
+- [x] Screenshots desktop + mobile stagger; report if 900vh is too long on mobile
 - [ ] Sam approves
 
 ## Phase 5 — Content
