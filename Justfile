@@ -1,3 +1,6 @@
+# Blender binary: set BLENDER to the path (see README); default is `blender` on PATH
+blender := env("BLENDER", "blender")
+
 dev:
     pnpm dev
 
@@ -53,3 +56,29 @@ assets:
       cwebp -quiet -q 85 "$tmp/$colour-000.png" -o "public/images/jar-$colour-a.webp"
       cwebp -quiet -q 85 "$tmp/$colour-001.png" -o "public/images/jar-$colour-b.webp"
     done
+
+# Blender scripts -> .glb -> gltf-transform (meshopt) -> gltfjsx components. Fails if models exceed 2 MB.
+models:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p blender/out public/models src/three/models
+    for m in jar gummy; do
+      {{blender}} -b --factory-startup --python "blender/build_$m.py" -- "blender/out/$m.glb" >/dev/null
+      pnpm exec gltf-transform optimize "blender/out/$m.glb" "public/models/$m.glb" --compress meshopt --texture-compress false --simplify false >/dev/null
+      name="$(tr '[:lower:]' '[:upper:]' <<<"${m:0:1}")${m:1}"
+      (cd public/models && pnpm exec gltfjsx "$m.glb" --types --keepnames -o "../../src/three/models/$name.tsx" >/dev/null)
+      # gltfjsx output fixes: component name, public path, React 19 JSX types, drop three-stdlib GLTF type
+      sed -i -E \
+        -e "s|useGLTF(.preload)?\('[^']*/$m\.glb'|useGLTF\1('/models/$m.glb'|" \
+        -e "s|export function Model|export function $name|" \
+        -e "s|JSX\.IntrinsicElements|React.JSX.IntrinsicElements|" \
+        -e "/animations: GLTFAction/d" \
+        -e "/import \{ GLTF \} from 'three-stdlib'/d" \
+        -e "s|GLTF & \{|{|" \
+        -e "s|\) as GLTFResult|) as unknown as GLTFResult|" \
+        "src/three/models/$name.tsx"
+      pnpm exec biome check --write --unsafe "src/three/models/$name.tsx" >/dev/null
+    done
+    total=$(cat public/models/*.glb | wc -c)
+    echo "models: $total bytes (budget 2097152)"
+    [ "$total" -le 2097152 ]
