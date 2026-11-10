@@ -26,6 +26,10 @@ type Gummy = {
 	scale: number;
 };
 
+/** Which way each card pulls its gummies (jar units, x): card 1 left, card 2 right, card 3 left. */
+const CARD_SIDE = [-1, 1, -1] as const;
+const CARD_PULL = 1.1;
+
 /** Jar units: radius 1, neck opening at y ~2.45, cap lifts to ~3.9. */
 const NECK: Vec3 = [0, 2.5, 0];
 
@@ -108,7 +112,10 @@ export function Gummies({
 				const pos = gummyPath(t, g.rest, NECK, g.float);
 				const bob = Math.sin(time * 1.1 + g.phase) * 0.07 * t;
 				const sway = Math.sin(time * 0.6 + g.phase) * 0.25 * tl.drift;
-				tmp.p.set(pos[0] + sway, pos[1] + bob, pos[2]);
+				// gummy i belongs to card i % 3 and drifts toward it while that card shows
+				const k = i % 3;
+				const pull = tl.cards[k] * CARD_SIDE[k] * CARD_PULL * t;
+				tmp.p.set(pos[0] + sway + pull, pos[1] + bob, pos[2]);
 				tmp.e.set(
 					g.spin[0] + t * 2.2 + time * 0.25 * t,
 					g.spin[1] + t * 3.1,

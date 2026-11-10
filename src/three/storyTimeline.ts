@@ -1,13 +1,19 @@
 /**
- * Scroll story timeline (D-59). Everything is a pure function of scroll progress p (0..1),
- * so scrolling back up plays it in reverse.
+ * Scroll story timeline (D-59, extended in Phase 4, D-62 to D-66). Everything is a pure function
+ * of scroll progress p (0..1), so scrolling back up plays it in reverse. Story is 900vh tall.
  *
- *  0.00-0.10  hero: jars closed, slowly turning
- *  0.10-0.28  caps lift
- *  0.22-0.55  gummies rise out of the neck
- *  0.55-0.72  hold and drift
- *  0.72-0.88  gummies sink back
- *  0.88-1.00  caps close, jars turn again
+ *  0.00-0.06  hero: cream, jars closed, slowly turning
+ *  0.04-0.10  headline fades out
+ *  0.06-0.14  night falls (cream -> split night), moon and stars in
+ *  0.12-0.22  caps lift
+ *  0.18-0.34  gummies rise out of the neck
+ *  0.31-0.58  3 ingredient cards, one after another; gummies drift toward the active card
+ *  0.58-0.79  3 benefits, one after another
+ *  0.76-0.84  gummies sink back
+ *  0.82-0.88  caps close
+ *  0.86-0.94  morning: back to cream, moon and stars out
+ *  0.90-0.97  3 badges in (staggered), stay until the end
+ *  0.90-0.97  jars turn again
  */
 
 export const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
@@ -17,6 +23,12 @@ export function smooth(a: number, b: number, x: number): number {
 	const t = clamp01((x - a) / (b - a));
 	return t * t * (3 - 2 * t);
 }
+
+/** Rises over a..b, falls over c..d. */
+const pulse = (a: number, b: number, c: number, d: number, x: number) =>
+	clamp01(smooth(a, b, x) - smooth(c, d, x));
+
+export type Triple = readonly [number, number, number];
 
 export type Timeline = {
 	/** 0 closed .. 1 cap fully lifted */
@@ -29,16 +41,49 @@ export type Timeline = {
 	spin: number;
 	/** headline and subtitle opacity */
 	text: number;
+	/** 0 cream (day) .. 1 full night */
+	night: number;
+	/** ingredient cards opacity; also how strongly gummy group i is pulled toward card i */
+	cards: Triple;
+	/** benefit opacities */
+	benefits: Triple;
+	/** badge opacities */
+	badges: Triple;
 };
+
+/** Three slots between a and b; each fades in/out over `f` around its edges (cross-fades). */
+function slots(a: number, b: number, f: number, x: number): Triple {
+	const w = (b - a) / 3;
+	const one = (i: number) => {
+		const s = a + w * i;
+		const e = s + w;
+		return pulse(
+			i === 0 ? s - f : s - f / 2,
+			i === 0 ? s : s + f / 2,
+			i === 2 ? e : e - f / 2,
+			i === 2 ? e + f : e + f / 2,
+			x,
+		);
+	};
+	return [one(0), one(1), one(2)];
+}
 
 export function timeline(p: number): Timeline {
 	const x = clamp01(p);
 	return {
-		capLift: clamp01(smooth(0.1, 0.28, x) - smooth(0.88, 1, x)),
-		gummyOut: clamp01(smooth(0.22, 0.55, x) - smooth(0.72, 0.88, x)),
-		drift: clamp01(smooth(0.55, 0.72, x) - smooth(0.72, 0.88, x)),
-		spin: clamp01(1 - smooth(0.05, 0.1, x) + smooth(0.88, 0.95, x)),
-		text: clamp01(1 - smooth(0.06, 0.12, x)),
+		capLift: pulse(0.12, 0.22, 0.82, 0.88, x),
+		gummyOut: pulse(0.18, 0.34, 0.76, 0.84, x),
+		drift: pulse(0.34, 0.44, 0.76, 0.84, x),
+		spin: clamp01(1 - smooth(0.05, 0.1, x) + smooth(0.9, 0.97, x)),
+		text: clamp01(1 - smooth(0.04, 0.1, x)),
+		night: pulse(0.06, 0.14, 0.86, 0.94, x),
+		cards: slots(0.34, 0.55, 0.03, x),
+		benefits: slots(0.61, 0.76, 0.03, x),
+		badges: [
+			smooth(0.9, 0.93, x),
+			smooth(0.92, 0.95, x),
+			smooth(0.94, 0.97, x),
+		],
 	};
 }
 
@@ -48,7 +93,7 @@ export function gummyProgress(out: number, i: number, n: number): number {
 	return smooth(0, 1, (out - delay) / (1 - 0.5));
 }
 
-export type Vec3 = readonly [number, number, number];
+export type Vec3 = Triple;
 
 /**
  * Gummy path: rest (inside the jar) -> neck (centre of the opening) -> float (outside).
