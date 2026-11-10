@@ -66,8 +66,8 @@ Goal: first screen works fully.
 - [x] Canvas + camera + lighting
 - [x] Jar slowly turning; cream background
 - [x] Green jar = opaque matte; pink jar = frosted see-through with gummies inside
-- [x] Jar picker (Green/Pink) + Label toggle (A/B); 4 looks swap smoothly
-- [x] Theme switch: colours, fonts, logo follow jar
+- [x] ~~Jar picker + Label toggle~~ replaced by two jars side by side (D-57)
+- [x] Theme: split by side, green as brand default (D-58)
 - [x] Header: wide logo desktop, stacked logo mobile
 - [x] Loading screen with stacked logo
 - [x] `useDeviceTier` (high/low/no-WebGL) wired in
@@ -78,7 +78,7 @@ Goal: first screen works fully.
 
 Goal: night → morning story works end to end.
 
-- [ ] drei ScrollControls timeline
+- [ ] Open/close timeline on native scroll (D-59); built first as the "Two jars" change, see PROGRESS
 - [ ] Night falls: background fade, moon + stars
 - [ ] Jar opens: cap lifts, gummies float out
 - [ ] Ingredients: gummies drift to 3 cards

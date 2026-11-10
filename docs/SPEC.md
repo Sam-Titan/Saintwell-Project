@@ -53,17 +53,15 @@ A one-page brand website for SAINTWELL, featuring a 3D Melatonin Gummies jar and
 
 ## 3. Looks (jar picker)
 
-- **Jar colour:** Green or Pink. **Label:** A or B. → 4 looks.
-- Default on load: Green + Label A.
+- **Two jars side by side (D-57):** Green + Label A (left), Pink + Label A (right). No picker, no toggle. Label B is unused (BACKLOG #12).
 - Same product in both colours.
-- Site theme follows jar colour: night colour (olive / maroon), accent colours, fonts, logo.
-- Choice is remembered for the visit (in-memory; optional localStorage in try/catch).
+- Theme is split by side (D-58): left green (olive, sage, Poppins + Lora), right pink (maroon, pink, Inter). Shared elements (header, h1, subtitle) use the green theme.
 
 ## 4. Page sections (scroll story: "one scroll = one night's sleep")
 
 1. **Hero** — cream background. 3D jar slowly turning. Logo, "Advanced Sleep Support Formula", jar picker + label toggle.
 2. **Night falls** — background fades cream → night colour (olive or maroon). Moon and stars appear.
-3. **Jar opens** — cap lifts, gummies float up.
+3. **Jars open** — both caps lift, gummies float out, later sink back and the caps close (D-59). Native scroll, 500vh sticky stage.
 4. **Ingredients** — gummies drift to 3 cards: Melatonin 5 mg, Chamomile, Vitamin B6. Card text = label text only + placeholders.
 5. **Benefits** — Calm Mind, Restful Sleep, Wake Refreshed appear one by one.
 6. **Morning** — background fades back to cream. Badges: Vegan, Gluten Free, Non GMO.
