@@ -4,6 +4,7 @@ import StaticStory from "./components/StaticStory";
 import Story from "./components/Story";
 import { useDeviceTier } from "./hooks/useDeviceTier";
 import { JarProvider } from "./theme/JarContext";
+import { isPoster } from "./three/mode";
 
 export default function App() {
 	const tier = useDeviceTier();
@@ -12,7 +13,7 @@ export default function App() {
 	const live = tier !== "none" && !reduce;
 	return (
 		<JarProvider>
-			<Header fixed={live} />
+			{!isPoster() && <Header fixed={live} />}
 			{live ? <Story /> : <StaticStory />}
 		</JarProvider>
 	);

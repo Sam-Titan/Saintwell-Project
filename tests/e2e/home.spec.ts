@@ -57,10 +57,9 @@ test("two jars render, no console errors, nothing from outside localhost", async
 			external.push(r.url());
 	});
 	await page.goto("/?tier=high");
-	await expect(page.locator("canvas[data-engine]").first()).toBeVisible({
-		timeout: 20000,
+	await expect(page.locator("canvas[data-engine]").first()).toBeAttached({
+		timeout: 30000,
 	});
-	await expect(page.getByRole("progressbar")).toBeHidden({ timeout: 30000 });
 	await scrollToStory(page, 0.4);
 	await page.waitForTimeout(1500);
 	expect(errors).toEqual([]);
@@ -84,6 +83,31 @@ test("scrolling drives the story and the headline fades out and back", async ({
 		.poll(() => progress(page), { timeout: 15000 })
 		.toBeLessThan(0.03);
 	await expect(fade).toHaveCSS("opacity", "1");
+});
+
+test("the hero is a static poster with no loader; the 3D cross-fades in on the first scroll (D-92)", async ({
+	page,
+}) => {
+	const errors = collectErrors(page);
+	await page.goto("/?tier=low");
+	// poster and headline at once, nothing that looks like a loader
+	const poster = page.locator("picture img").first();
+	await expect(poster).toBeVisible();
+	await expect(poster).toHaveJSProperty("complete", true);
+	await expect(page.getByRole("progressbar")).toHaveCount(0);
+	await expect(page.getByText("Loading the jars")).toHaveCount(0);
+	// the 3D loads in the background; the poster stays until the user scrolls
+	const canvasBox = page.locator("[data-hero-3d]");
+	await expect(page.locator("canvas[data-engine]").first()).toBeAttached({
+		timeout: 30000,
+	});
+	await expect(canvasBox).toHaveCSS("opacity", "0");
+	await scrollToStory(page, 0.05);
+	await expect(canvasBox).toHaveCSS("opacity", "1", { timeout: 15000 });
+	await expect(page.locator("[data-hero-poster]")).toHaveCSS("opacity", "0", {
+		timeout: 15000,
+	});
+	expect(errors).toEqual([]);
 });
 
 test("a small wheel scroll does not jump past the open state", async ({

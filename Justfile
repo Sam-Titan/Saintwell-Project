@@ -16,6 +16,22 @@ lighthouse:
     pnpm build
     pnpm exec lhci autorun
 
+# Production build + preview: measure fps and loading here, not in dev (add ?fps=1 to the URL for an fps readout)
+preview:
+    pnpm build
+    pnpm preview
+
+# Render the hero posters (public/images/poster-*.webp) from the real scene. Needs a GPU for the sharpest frosted jar;
+# works on any machine with Playwright's Chromium. Starts the dev server itself.
+poster:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p blender/out
+    POSTER=1 pnpm exec playwright test tests/e2e/poster.spec.ts
+    cwebp -quiet -q 82 blender/out/poster-desktop.png -o public/images/poster-desktop.webp
+    cwebp -quiet -q 82 blender/out/poster-mobile.png -o public/images/poster-mobile.webp
+    ls -l public/images/poster-*.webp
+
 # Export brand images from brand/SAINTWELL.pdf (poppler + cwebp). Crop boxes are in px at 288 dpi (4x the 1440x810 pt slides).
 assets:
     #!/usr/bin/env bash
@@ -66,7 +82,7 @@ models:
     mkdir -p blender/out public/models src/three/models
     for m in jar gummy; do
       {{blender}} -b --factory-startup --python "blender/build_$m.py" -- "blender/out/$m.glb" >/dev/null
-      pnpm exec gltf-transform optimize "blender/out/$m.glb" "public/models/$m.glb" --compress meshopt --texture-compress false --simplify false >/dev/null
+      pnpm exec gltf-transform optimize "blender/out/$m.glb" "public/models/$m.glb" --compress meshopt --texture-compress false --simplify false --join false >/dev/null
       name="$(tr '[:lower:]' '[:upper:]' <<<"${m:0:1}")${m:1}"
       (cd public/models && pnpm exec gltfjsx "$m.glb" --types --keepnames -o "../../src/three/models/$name.tsx" >/dev/null)
       # gltfjsx output fixes: component name, public path, React 19 JSX types, drop three-stdlib GLTF type
@@ -85,6 +101,7 @@ models:
     mkdir -p public/textures/gummy
     cwebp -quiet -q 92 blender/out/sugar-normal.png -o public/textures/gummy/sugar-normal.webp
     cwebp -quiet -q 85 blender/out/sugar-specks.png -o public/textures/gummy/sugar-specks.webp
+    cwebp -quiet -q 88 blender/out/sugar-rough.png -o public/textures/gummy/sugar-rough.webp
     total=$(cat public/models/*.glb public/textures/gummy/*.webp | wc -c)
     echo "models + gummy textures: $total bytes (budget 2097152)"
     [ "$total" -le 2097152 ]

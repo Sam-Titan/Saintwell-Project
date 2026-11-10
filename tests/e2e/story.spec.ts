@@ -51,7 +51,7 @@ test("scene 1 hero text shows at p=0 and is gone in the settled scene", async ({
 	await page.goto("/?tier=low");
 	const fade = page.getByRole("heading", { level: 1 }).locator("..");
 	await expect(fade).toHaveCSS("opacity", "1");
-	await goTo(page, 0.3);
+	await goTo(page, 0.15);
 	await expect(fade).toHaveCSS("opacity", "0");
 	for (const t of [...ingredients, ...benefits])
 		await expect(block(page, t)).toHaveCSS("opacity", "0");
@@ -61,7 +61,7 @@ test("scene 4a: the four ingredient blocks show, no benefits", async ({
 	page,
 }) => {
 	await page.goto("/?tier=low");
-	await goTo(page, 0.46);
+	await goTo(page, 0.38);
 	for (const t of ingredients)
 		await expect(block(page, t)).toHaveCSS("opacity", "1");
 	for (const t of benefits)
@@ -76,7 +76,7 @@ test("scene 4b: the four benefit blocks show, no ingredients", async ({
 	page,
 }) => {
 	await page.goto("/?tier=low");
-	await goTo(page, 0.66);
+	await goTo(page, 0.6);
 	for (const t of benefits)
 		await expect(block(page, t)).toHaveCSS("opacity", "1");
 	for (const t of ingredients)
@@ -100,7 +100,7 @@ test("scene 6: numbers and badges show, blocks gone; scrolling back reverses", a
 		await expect(badge(page, b)).toHaveCSS("opacity", "1");
 	for (const t of [...ingredients, ...benefits])
 		await expect(block(page, t)).toHaveCSS("opacity", "0");
-	await goTo(page, 0.66);
+	await goTo(page, 0.6);
 	for (const b of badges)
 		await expect(badge(page, b)).toHaveCSS("opacity", "0");
 	for (const t of benefits)
@@ -112,16 +112,16 @@ test("nav links land with their scene fully in view", async ({ page }) => {
 	await page.getByRole("link", { name: "Ingredients" }).first().click();
 	await expect
 		.poll(() => progress(page), { timeout: 30000 })
-		.toBeCloseTo(0.46, 1);
+		.toBeCloseTo(0.38, 1);
 	await expect
 		.poll(() => progress(page), { timeout: 30000 })
-		.toBeCloseTo(0.46, 2);
+		.toBeCloseTo(0.38, 2);
 	for (const t of ingredients)
 		await expect(block(page, t)).toHaveCSS("opacity", "1");
 	await page.getByRole("link", { name: "Benefits" }).first().click();
 	await expect
 		.poll(() => progress(page), { timeout: 30000 })
-		.toBeCloseTo(0.66, 2);
+		.toBeCloseTo(0.6, 2);
 	for (const t of benefits)
 		await expect(block(page, t)).toHaveCSS("opacity", "1");
 });
@@ -172,7 +172,7 @@ test.describe("phone menu", () => {
 		await expect(page.getByRole("dialog")).toHaveCount(0);
 		await expect
 			.poll(() => progress(page), { timeout: 30000 })
-			.toBeCloseTo(0.66, 1);
+			.toBeCloseTo(0.6, 1);
 	});
 });
 
@@ -249,8 +249,10 @@ test("whole story at high tier: no console errors, nothing from outside localhos
 			external.push(r.url());
 	});
 	await page.goto("/?tier=high");
-	await expect(page.getByRole("progressbar")).toBeHidden({ timeout: 30000 });
-	for (const p of [0.12, 0.45, 0.7, 0.95]) {
+	await expect(page.locator("canvas[data-engine]").first()).toBeAttached({
+		timeout: 30000,
+	});
+	for (const p of [0.1, 0.38, 0.6, 0.95]) {
 		await scrollToStory(page, p);
 		await page.waitForTimeout(1500);
 	}

@@ -46,7 +46,11 @@ export function HeroGummy({
 	state: HeroState;
 }) {
 	const { nodes } = useGLTF("/models/gummy.glb") as unknown as GummyGLTF;
-	const material = useHeroMaterial(colour, jarColours[colour].gummy);
+	const material = useHeroMaterial(
+		colour,
+		jarColours[colour].gummy,
+		tier === "high",
+	);
 	const group = useRef<THREE.Group>(null);
 	const body = useRef<THREE.Mesh>(null);
 	const halo = useRef<THREE.SpriteMaterial>(null);
@@ -107,7 +111,7 @@ export function HeroGummy({
 		// shared with depth of field and the DOM
 		state.target.copy(g.position);
 		state.amount = Math.max(state.amount, t);
-		if (halo.current) halo.current.opacity = t * 0.9;
+		if (halo.current) halo.current.opacity = t * (tier === "high" ? 0.55 : 0.9);
 		// the halo is as big as the gummy and a bit more; it faces the camera
 		const h = g.children[1] as THREE.Sprite | undefined;
 		if (h) h.scale.setScalar(endScale * MODEL_WIDTH * 2.4 * t + 0.001);
@@ -120,7 +124,8 @@ export function HeroGummy({
 				geometry={nodes.GummyHero.geometry}
 				material={material}
 			/>
-			{tier !== "high" && (
+			{/* soft radial glow behind the gummy, every tier (D-97); Bloom adds to it on high */}
+			{
 				<sprite renderOrder={-1}>
 					<spriteMaterial
 						ref={halo}
@@ -132,7 +137,7 @@ export function HeroGummy({
 						toneMapped={false}
 					/>
 				</sprite>
-			)}
+			}
 		</group>
 	);
 }

@@ -4,7 +4,7 @@ import type { MotionValue } from "motion/react";
 import { useCallback, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import type { JarColour } from "../theme/tokens";
-import { useHeroMaterial } from "./gummyMaterial";
+import { useGummyMaterial } from "./gummyMaterial";
 import { jarColours } from "./looks";
 import { type Layout, MOUTH } from "./poses";
 import { rng } from "./random";
@@ -26,10 +26,12 @@ type Spec = {
 
 /** Standing jar: gummies start stacked inside, rise through the neck and float on a ring around it. */
 const NECK: Vec3 = [0, MOUTH, 0];
+/** Centre of the green float ring, in the standing jar's frame (the jar is left of centre). */
+export const FLOAT_CX = 1.9;
 /** The first green gummy floats here; the big hero gummy takes off from (and returns to) this spot. */
-export const GREEN_FLOAT0: Vec3 = [-1.5, 3.4, 0.4];
+export const GREEN_FLOAT0: Vec3 = [1.9, 3.4, 0.3];
 
-function standing(count: number, seed: number): Spec[] {
+export function standing(count: number, seed: number): Spec[] {
 	const r = rng(seed);
 	return Array.from({ length: count }, (_, i) => {
 		const a = r() * Math.PI * 2;
@@ -39,12 +41,17 @@ function standing(count: number, seed: number): Spec[] {
 			0.34 + (i / count) * 1.4 + r() * 0.12,
 			Math.sin(a) * rad,
 		];
+		// they float above and between the jars, inside the clear centre band (D-101)
 		const fa = (i / count) * Math.PI * 2 + r() * 0.5;
-		const fr = 1.3 + r() * 0.55;
+		const fr = 0.3 + r() * 0.4;
 		const float: Vec3 =
 			i === 0
 				? GREEN_FLOAT0
-				: [Math.cos(fa) * fr, 2.7 + r() * 1.1, Math.sin(fa) * fr * 0.6];
+				: [
+						FLOAT_CX + Math.cos(fa) * fr,
+						2.7 + r() * 1.2,
+						Math.sin(fa) * 0.7 * (0.5 + r()),
+					];
 		return {
 			rest,
 			float,
@@ -59,9 +66,9 @@ function standing(count: number, seed: number): Spec[] {
 export const GROUND_Y = -1 + 0.2;
 export const PINK_MOUTH: Vec3 = [MOUTH + 0.05, -0.45, 0];
 /** Where the first pink gummy ends up; the pink hero gummy takes off from here. */
-export const PINK_GROUND0: Vec3 = [3.6, GROUND_Y, 1.0];
+export const PINK_GROUND0: Vec3 = [1.8, GROUND_Y, 1.6];
 
-function lying(count: number, seed: number): Spec[] {
+export function lying(count: number, seed: number): Spec[] {
 	const r = rng(seed);
 	return Array.from({ length: count }, (_, i) => {
 		// a pile along the axis, low in the jar (gravity): local y < 0 is towards the ground
@@ -70,7 +77,7 @@ function lying(count: number, seed: number): Spec[] {
 		const down = -(0.1 + r() * 0.5);
 		const rest: Vec3 = [along, down, side];
 		const ground: Vec3 =
-			i === 0 ? PINK_GROUND0 : [3.0 + r() * 1.7, GROUND_Y, (r() - 0.35) * 2.6];
+			i === 0 ? PINK_GROUND0 : [1.2 + r() * 0.8, GROUND_Y, 1.2 + r() * 0.8];
 		return {
 			rest,
 			float: ground,
@@ -109,15 +116,10 @@ export function Gummies({
 		() => (lie ? lying(count, seed) : standing(count, seed)),
 		[lie, count, seed],
 	);
-	const material = useMemo(
-		() =>
-			new THREE.MeshStandardMaterial({
-				color: jarColours[colour].gummy,
-				roughness: 0.35,
-				transparent: true,
-			}),
-		[colour],
-	);
+	// same matte, sugar-dusted look as the hero gummy, no glow (D-98)
+	const material = useGummyMaterial(colour, jarColours[colour].gummy, {
+		normalScale: 0.35,
+	});
 	const tmp = useMemo(
 		() => ({
 			m: new THREE.Matrix4(),
@@ -195,7 +197,7 @@ export function Ambient({
 }) {
 	const { nodes } = useGLTF("/models/gummy.glb") as unknown as GummyGLTF;
 	const mesh = useRef<THREE.InstancedMesh>(null);
-	const material = useHeroMaterial(colour, jarColours[colour].gummy);
+	const material = useGummyMaterial(colour, jarColours[colour].gummy);
 	const tmp = useMemo(
 		() => ({
 			m: new THREE.Matrix4(),

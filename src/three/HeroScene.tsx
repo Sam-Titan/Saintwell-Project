@@ -1,44 +1,57 @@
 import { ContactShadows } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import type { MotionValue } from "motion/react";
-import { Perf } from "r3f-perf";
-import { lazy, Suspense, useLayoutEffect, useMemo, useRef } from "react";
+import {
+	lazy,
+	Suspense,
+	useEffect,
+	useLayoutEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import * as THREE from "three";
 import { copy } from "../content/copy";
 import { type Tier, tierSettings } from "../hooks/useDeviceTier";
+import { FpsMeter } from "./FpsMeter";
 import { Ambient, Gummies } from "./Gummies";
 import { HeroGummy, type HeroState } from "./HeroGummy";
 import { LabeledJar } from "./LabeledJar";
-import LoadingScreen from "./LoadingScreen";
-import { FRAME, type Layout, unitPosition } from "./poses";
+import { isPoster } from "./mode";
+import {
+	AMBIENT,
+	CAP_STASH_SCALE,
+	cameraFor,
+	capStashLocal,
+	FOV,
+	HERO_RAISE,
+	type Layout,
+	unitPosition,
+} from "./poses";
 import { Studio } from "./Studio";
 import { timelineAt } from "./sceneTime";
 import { backgroundAt, rgbCss } from "./storyTimeline";
+import { WordPlane } from "./WordPlane";
 
 export type { Layout };
 
 // Bloom + depth of field: own chunk, fetched on the high tier only (D-84)
 const Fx = lazy(() => import("./Fx"));
 
-const FOV = 28;
-const TILT = 0.1; // camera looks slightly down on the ground (radians)
+// r3f-perf is a dev tool only (D-99): never part of the production build
+const Perf = import.meta.env.DEV
+	? lazy(() => import("r3f-perf").then((m) => ({ default: m.Perf })))
+	: null;
 
-/** Moves the camera back until the frame box fits (any aspect ratio); keeps top / bottom space clear. */
+/** Puts the camera where `cameraFor` says (any aspect ratio; keeps top / bottom space clear). */
 function FitCamera({ layout }: { layout: Layout }) {
 	const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera;
 	const size = useThree((s) => s.size);
 	const invalidate = useThree((s) => s.invalidate);
 	useLayoutEffect(() => {
-		const half = Math.tan((FOV / 2) * (Math.PI / 180));
-		const aspect = size.width / size.height;
-		const f = FRAME[layout];
-		const H = Math.max(f.h / (1 - f.top - f.bottom), f.w / aspect);
-		const z = H / 2 / half;
-		const viewTop = f.cy + f.h / 2 + f.top * H;
-		const viewBottom = f.cy - f.h / 2 - f.bottom * H;
-		const centre = (viewTop + viewBottom) / 2;
-		camera.position.set(f.cx, centre + z * Math.tan(TILT), z);
-		camera.lookAt(f.cx, centre, 0);
+		const { position, target } = cameraFor(layout, size.width / size.height);
+		camera.position.set(...position);
+		camera.lookAt(...target);
 		camera.updateProjectionMatrix();
 		invalidate();
 	}, [camera, size, layout, invalidate]);
@@ -66,36 +79,6 @@ function setOpacity(group: THREE.Object3D, k: number) {
 	});
 }
 
-/** Ambient floating gummies per layout (world units: x, y, z, size). */
-const AMBIENT: Record<
-	Layout,
-	{
-		green: readonly (readonly [number, number, number, number])[];
-		pink: readonly (readonly [number, number, number, number])[];
-	}
-> = {
-	desktop: {
-		green: [
-			[-3.1, 1.3, 0.6, 1.5],
-			[-2.1, 0.55, 1.0, 0.85],
-		],
-		pink: [
-			[3.1, 3.9, -0.4, 1.4],
-			[3.6, 2.7, -0.6, 0.85],
-		],
-	},
-	mobile: {
-		green: [
-			[-1.9, 1.5, 0.4, 1.2],
-			[-1.2, 0.5, 0.8, 0.75],
-		],
-		pink: [
-			[1.8, 4.1, -0.4, 1.1],
-			[2.2, 3.0, -0.6, 0.7],
-		],
-	},
-};
-
 /** Both jars, their gummies, the ground shadow and the hero gummies. One useFrame moves the units. */
 function Scene({
 	tier,
@@ -109,65 +92,102 @@ function Scene({
 	hero: HeroState;
 }) {
 	const s = tierSettings(tier);
+	const poster = useMemo(isPoster, []);
+	const scene = useThree((st) => st.scene);
 	const green = useRef<THREE.Group>(null);
 	const greenSpin = useRef<THREE.Group>(null);
 	const pink = useRef<THREE.Group>(null);
 	const pinkRoll = useRef<THREE.Group>(null);
 	const fadeLast = useRef(-1);
-	// colour behind the transparent canvas, used as the frosted jar's transmission background (D-80)
+	// the scene draws its own background (D-94): colour from backgroundAt(p), updated every frame.
+	// It is also what the frosted jar sees through its glass (the D-51 fix).
 	const behind = useMemo(() => new THREE.Color(), []);
-
-	useFrame(({ clock }, delta) => {
-		const tl = timelineAt(progress.get());
+	useLayoutEffect(() => {
 		behind.setStyle(rgbCss(backgroundAt(progress.get())));
+		scene.background = behind;
+		return () => {
+			scene.background = null;
+		};
+	}, [scene, behind, progress]);
+	const capStash = useMemo(
+		() => ({
+			green: capStashLocal(layout, "green"),
+			pink: capStashLocal(layout, "pink"),
+		}),
+		[layout],
+	);
+	// shadows are redrawn only while something moves (D-99)
+	const lastP = useRef(-1);
+	const still = useRef(0);
+	const [shadowFrames, setShadowFrames] = useState(Number.POSITIVE_INFINITY);
+	const shadowMode = useRef(Number.POSITIVE_INFINITY);
+
+	useFrame((state) => {
+		const { clock } = state;
+		const p = progress.get();
+		const tl = timelineAt(p);
+		behind.setStyle(rgbCss(backgroundAt(p)));
 		const g = green.current;
 		const gs = greenSpin.current;
-		const p = pink.current;
+		const pk = pink.current;
 		const pr = pinkRoll.current;
-		if (!g || !gs || !p || !pr) return;
+		if (!g || !gs || !pk || !pr) return;
 		const gp = unitPosition(layout, "green", tl.settle);
 		const pp = unitPosition(layout, "pink", tl.settle);
 		g.position.set(gp[0], gp[1], gp[2]);
-		p.position.set(pp[0], pp[1], pp[2]);
-		// slow spin while it is free, ease to face the front when the story needs it
-		const turn = (obj: THREE.Object3D, axis: "x" | "y") => {
-			obj.rotation[axis] += delta * 0.35 * tl.spin;
-			const front =
-				Math.round(obj.rotation[axis] / (Math.PI * 2)) * Math.PI * 2;
-			obj.rotation[axis] +=
-				(front - obj.rotation[axis]) * (1 - tl.spin) * Math.min(1, delta * 5);
-		};
-		turn(gs, "y");
-		// the lying jar sways gently around its axis, so its label keeps facing the front
-		pr.rotation.x = Math.sin(clock.elapsedTime * 0.5) * 0.45 * tl.spin;
+		pk.position.set(pp[0], pp[1], pp[2]);
+		// both jars sway gently while they are free, so their labels always stay readable (D-96)
+		const time = poster ? 0 : clock.elapsedTime;
+		gs.rotation.y = Math.sin(time * 0.45) * 0.25 * tl.spin;
+		pr.rotation.x = Math.sin(time * 0.5 + 1) * 0.25 * tl.spin;
 		// while a hero gummy has the stage the rest fades (and, on the low tier, shrinks and moves back)
 		const f = tl.focus;
 		if (Math.abs(f - fadeLast.current) > 0.004) {
 			fadeLast.current = f;
 			const k = 1 - (tier === "high" ? 0.3 : 0.6) * f;
 			setOpacity(g, k);
-			setOpacity(p, k);
+			setOpacity(pk, k);
 			if (tier !== "high") {
 				g.scale.setScalar(1 - 0.18 * f);
-				p.scale.setScalar(1 - 0.18 * f);
+				pk.scale.setScalar(1 - 0.18 * f);
 			}
 		}
 		hero.amount = 0;
+		// the view starts raised, so the jars sit lower under the headline; it settles with the jars (D-96)
+		const cam = state.camera as THREE.PerspectiveCamera;
+		const c = cameraFor(
+			layout,
+			state.size.width / state.size.height,
+			HERO_RAISE[layout] * (1 - tl.settle),
+		);
+		cam.position.set(...c.position);
+		cam.lookAt(...c.target);
+		// contact shadows: redraw while p changes or a jar still sways; rest otherwise
+		const moving = Math.abs(p - lastP.current) > 1e-4 || tl.spin > 0.001;
+		lastP.current = p;
+		still.current = moving ? 0 : still.current + 1;
+		const want = still.current > 20 ? 1 : Number.POSITIVE_INFINITY;
+		if (want !== shadowMode.current) {
+			shadowMode.current = want;
+			setShadowFrames(want);
+		}
 	});
 
 	const crowd = s.gummyCount;
 	const shrink = tier === "high" ? 0 : 0.3;
 	return (
 		<>
+			{/* the giant faint SAINTWELL word, drawn in the scene (D-94) */}
+			<WordPlane layout={layout} progress={progress} />
 			{/* ground: soft real contact shadows (no network, D-82) */}
 			<ContactShadows
-				position={[0, 0.01, 0]}
-				opacity={0.5}
-				scale={22}
-				blur={2.6}
-				far={3.2}
-				resolution={tier === "high" ? 512 : 256}
-				frames={Number.POSITIVE_INFINITY}
+				position={[0, -0.015, 0]}
+				opacity={0.55}
+				scale={tier === "high" ? 11 : 12}
+				blur={3.2}
+				far={2.6}
+				resolution={tier === "high" ? 1024 : 512}
+				frames={shadowFrames}
 				color="#1c2214"
 			/>
 
@@ -179,6 +199,8 @@ function Scene({
 						textureSize={s.textureSize}
 						transmission={false}
 						progress={progress}
+						capStash={capStash.green}
+						capStashScale={CAP_STASH_SCALE}
 					/>
 					<Gummies
 						colour="green"
@@ -202,6 +224,8 @@ function Scene({
 							progress={progress}
 							behind={behind}
 							capOffset={[-1.1, 0, 0]}
+							capStash={capStash.pink}
+							capStashScale={CAP_STASH_SCALE}
 						/>
 					</group>
 				</group>
@@ -234,13 +258,23 @@ function Scene({
 				progress={progress}
 				state={hero}
 			/>
-			{tier === "high" && (
-				<Suspense fallback={null}>
-					<Fx progress={progress} hero={hero} />
-				</Suspense>
-			)}
 		</>
 	);
+}
+
+/** Tells the page the first frame has been drawn (the poster can fade out). */
+function ReadySignal({ onReady }: { onReady: () => void }) {
+	const done = useRef(false);
+	const frames = useRef(0);
+	useFrame(() => {
+		if (done.current) return;
+		// a few frames, so textures and the first transmission pass are in
+		if (++frames.current >= 4) {
+			done.current = true;
+			onReady();
+		}
+	});
+	return null;
 }
 
 export default function HeroScene({
@@ -248,37 +282,65 @@ export default function HeroScene({
 	progress,
 	layout,
 	active = true,
+	onReady,
 }: {
 	tier: Exclude<Tier, "none">;
 	progress: MotionValue<number>;
 	layout: Layout;
 	/** false = stage is off screen: stop rendering (D-71) */
 	active?: boolean;
+	/** called once, after the first frames are drawn */
+	onReady?: () => void;
 }) {
 	const hero = useMemo<HeroState>(
 		() => ({ target: new THREE.Vector3(0, 2, 0), amount: 0 }),
 		[],
 	);
 	const s = tierSettings(tier);
+	const poster = useMemo(isPoster, []);
+	const [fx, setFx] = useState(false);
+	// effects (high tier): fetched and compiled at idle, then they stay mounted (D-97)
+	useEffect(() => {
+		if (tier !== "high") return;
+		const ric =
+			window.requestIdleCallback ??
+			((cb: () => void) => window.setTimeout(cb, 600));
+		const id = ric(() => setFx(true));
+		return () => {
+			if (window.cancelIdleCallback) window.cancelIdleCallback(id as number);
+		};
+	}, [tier]);
 	return (
-		<>
-			<Canvas
-				className="h-full w-full"
-				dpr={s.dpr}
-				frameloop={active ? "always" : "never"}
-				camera={{ position: [0, 3, 12], fov: FOV }}
-				gl={{ antialias: tier === "high", alpha: true }}
-				role="img"
-				aria-label={copy.ui.canvasDescription}
-			>
-				<FitCamera layout={layout} />
-				<Studio />
+		<Canvas
+			className="h-full w-full"
+			dpr={poster ? [2, 2] : s.dpr}
+			frameloop={active ? "always" : "never"}
+			camera={{ position: [0, 3, 12], fov: FOV }}
+			gl={{ antialias: tier === "high", alpha: false }}
+			// the scene draws its own background; render targets (contact shadows) must clear to transparent
+			onCreated={({ gl }) => gl.setClearColor(0x000000, 0)}
+			role="img"
+			aria-label={copy.ui.canvasDescription}
+		>
+			<FitCamera layout={layout} />
+			<Studio />
+			<Suspense fallback={null}>
+				<Scene tier={tier} progress={progress} layout={layout} hero={hero} />
+				{onReady && <ReadySignal onReady={onReady} />}
+			</Suspense>
+			{tier === "high" && fx && (
 				<Suspense fallback={null}>
-					<Scene tier={tier} progress={progress} layout={layout} hero={hero} />
+					<Fx progress={progress} hero={hero} />
 				</Suspense>
-				{import.meta.env.DEV && <Perf position="bottom-left" minimal />}
-			</Canvas>
-			<LoadingScreen />
-		</>
+			)}
+			{!poster && new URLSearchParams(window.location.search).has("fps") && (
+				<FpsMeter progress={progress} />
+			)}
+			{Perf && !poster && (
+				<Suspense fallback={null}>
+					<Perf position="bottom-left" minimal />
+				</Suspense>
+			)}
+		</Canvas>
 	);
 }

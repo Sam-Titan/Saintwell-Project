@@ -35,9 +35,9 @@ export default function HeroText({
 				progress={progress}
 				select={hero}
 				lift={0}
-				className="pointer-events-none absolute top-[50%] left-[10%] max-w-[22vw] text-olive max-sm:hidden"
+				className="pointer-events-none absolute top-[45%] left-[10%] text-olive max-sm:hidden"
 			>
-				<p className="font-medium font-poppins text-[0.95vw] uppercase leading-relaxed tracking-[0.32em]">
+				<p className="whitespace-nowrap font-medium font-poppins text-[0.9vw] uppercase leading-relaxed tracking-[0.24em]">
 					{copy.hero.leftSub}
 				</p>
 			</Reveal>
@@ -45,7 +45,7 @@ export default function HeroText({
 				progress={progress}
 				select={hero}
 				lift={0}
-				className="pointer-events-none absolute top-[50%] right-[10%] text-right text-maroon max-sm:hidden"
+				className="pointer-events-none absolute top-[45%] right-[10%] text-right text-maroon max-sm:hidden"
 			>
 				<p className="font-inter text-[1.35vw] leading-snug">
 					{copy.hero.rightSub[0]}

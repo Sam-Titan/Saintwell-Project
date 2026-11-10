@@ -1,16 +1,26 @@
 import {
+	motion,
 	useInView,
 	useMotionValueEvent,
 	useScroll,
 	useSpring,
 } from "motion/react";
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import {
+	lazy,
+	Suspense,
+	useCallback,
+	useEffect,
+	useRef,
+	useState,
+} from "react";
+import { copy } from "../content/copy";
 import { tierSettings, useDeviceTier } from "../hooks/useDeviceTier";
 import { useJar } from "../theme/JarContext";
+import { isPoster } from "../three/mode";
 import type { Layout } from "../three/poses";
+import { PROGRESS_SPRING } from "../three/smoothing";
 import { ANCHORS } from "../three/storyTimeline";
 import HeroText from "./HeroText";
-import LoaderPlate from "./LoaderPlate";
 import Numbers from "./Numbers";
 import SceneBlocks from "./SceneBlocks";
 import { StageBackground, Veil } from "./StageBackground";
@@ -52,15 +62,41 @@ export default function Story() {
 		target: wrap,
 		offset: ["start start", "end end"],
 	});
-	const smoothed = useSpring(scrollYProgress, {
-		stiffness: 120,
-		damping: 30,
-		mass: 0.5,
-	});
+	// critically damped (damping = 2 * sqrt(stiffness * mass)): the 3D and all text ease to the scroll
+	// position in about 0.25 s, nothing limits the scroll speed (D-100)
+	const smoothed = useSpring(scrollYProgress, PROGRESS_SPRING);
+	// the poster hero (D-92): static image first, 3D loads behind it, cross-fades in on the first scroll
+	const poster = isPoster();
+	const [load3d, setLoad3d] = useState(poster);
+	const [ready, setReady] = useState(false);
+	const [scrolled, setScrolled] = useState(poster);
+	const onReady = useCallback(() => setReady(true), []);
 	useMotionValueEvent(smoothed, "change", (v) => {
 		progress.set(v);
 		wrap.current?.setAttribute("data-story-progress", v.toFixed(3));
 	});
+	// "scrolled" = the user has moved the page (also true after a reload that restores the scroll position)
+	useEffect(() => {
+		const check = () => {
+			if (window.scrollY > 4) setScrolled(true);
+		};
+		check();
+		window.addEventListener("scroll", check, { passive: true });
+		return () => window.removeEventListener("scroll", check);
+	}, []);
+	useEffect(() => {
+		if (load3d) return;
+		const start = () => {
+			const ric =
+				window.requestIdleCallback ??
+				((cb: () => void) => window.setTimeout(cb, 300));
+			ric(() => setLoad3d(true));
+		};
+		if (document.readyState === "complete") start();
+		else window.addEventListener("load", start, { once: true });
+		return () => window.removeEventListener("load", start);
+	}, [load3d]);
+	const show3d = ready && scrolled;
 
 	// start loading the labels at once; dynamic import keeps three/drei out of the main bundle
 	useEffect(() => {
@@ -73,24 +109,62 @@ export default function Story() {
 			<section
 				ref={wrap}
 				data-story-progress="0.000"
-				className="relative h-[800vh] sm:h-[900vh]"
+				className="relative h-[700vh] sm:h-[800vh]"
 			>
 				<div className="sticky top-0 h-screen overflow-hidden">
 					<StageBackground progress={progress} />
-					<Suspense fallback={<LoaderPlate />}>
-						<HeroScene
-							tier={tier}
-							progress={progress}
-							layout={layout}
-							active={onScreen}
-						/>
-					</Suspense>
-					<Veil progress={progress} />
-					<HeroText progress={progress} />
-					<SceneBlocks which="ingredients" progress={progress} />
-					<SceneBlocks which="benefits" progress={progress} />
-					<StepMarker progress={progress} />
-					<Numbers progress={progress} />
+					{!poster && (
+						<motion.picture
+							initial={false}
+							animate={{ opacity: show3d ? 0 : 1 }}
+							transition={{ duration: 0.35 }}
+							style={{ pointerEvents: "none" }}
+							className="absolute inset-0 block"
+							data-hero-poster
+						>
+							<source
+								media="(max-width: 639px)"
+								srcSet="/images/poster-mobile.webp"
+							/>
+							<img
+								src="/images/poster-desktop.webp"
+								alt={copy.ui.canvasDescription}
+								fetchPriority="high"
+								className="h-full w-full object-cover"
+							/>
+						</motion.picture>
+					)}
+					{load3d && (
+						<motion.div
+							initial={false}
+							animate={{ opacity: show3d || poster ? 1 : 0 }}
+							transition={{ duration: 0.35 }}
+							aria-hidden={!(show3d || poster)}
+							data-hero-3d
+							className="absolute inset-0"
+						>
+							<Suspense fallback={null}>
+								<HeroScene
+									tier={tier}
+									progress={progress}
+									layout={layout}
+									active={onScreen && (!ready || scrolled)}
+									onReady={onReady}
+								/>
+							</Suspense>
+						</motion.div>
+					)}
+					{/* poster mode (`just poster`): the scene alone, no page text over it */}
+					{!poster && (
+						<>
+							<Veil progress={progress} />
+							<HeroText progress={progress} />
+							<SceneBlocks which="ingredients" progress={progress} />
+							<SceneBlocks which="benefits" progress={progress} />
+							<StepMarker progress={progress} />
+							<Numbers progress={progress} />
+						</>
+					)}
 				</div>
 				{/* nav targets: each sits where its scene is fully in view (D-86) */}
 				<span

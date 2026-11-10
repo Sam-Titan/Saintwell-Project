@@ -10,6 +10,7 @@ import * as THREE from "three";
 import type { JarColour, JarLabel } from "../theme/tokens";
 import { applyLabelFit, createLabelMask, labelBandSize } from "./labelFit";
 import { jarColours, labelUrl } from "./looks";
+import { isPoster } from "./mode";
 import { timelineAt } from "./sceneTime";
 
 /** How far the cap rises when the jar is fully open (jar units). */
@@ -27,6 +28,9 @@ type Props = {
 	progress?: MotionValue<number>;
 	/** Extra cap movement at full lift, in the jar's own frame (the lying jar lifts its cap up and away). */
 	capOffset?: readonly [number, number, number];
+	/** Where the cap waits in 4a/4b, in the jar's own frame (absolute); it moves there with `aside` and shrinks. */
+	capStash?: readonly [number, number, number];
+	capStashScale?: number;
 	/** Colour behind the (transparent) canvas, used as the transmission background of the frosted jar. */
 	behind?: THREE.Color;
 } & Omit<React.JSX.IntrinsicElements["group"], "ref">;
@@ -43,6 +47,8 @@ export function LabeledJar({
 	progress,
 	behind,
 	capOffset = [0, 0, 0],
+	capStash,
+	capStashScale = 0.62,
 	...props
 }: Props) {
 	const group = useRef<THREE.Group>(null);
@@ -56,7 +62,11 @@ export function LabeledJar({
 	const { nodes } = useGLTF("/models/jar.glb") as unknown as {
 		nodes: { Body: THREE.Mesh };
 	};
-	const cap = useRef<{ mesh: THREE.Mesh; baseY: number } | null>(null);
+	const cap = useRef<{
+		mesh: THREE.Mesh;
+		baseY: number;
+		baseScale: number;
+	} | null>(null);
 	const frosted = colour === "pink" && transmission;
 
 	// Cap and label get their own materials (once per mount).
@@ -72,7 +82,11 @@ export function LabeledJar({
 			return { mesh, m };
 		};
 		const capClone = clone("Cap");
-		cap.current = { mesh: capClone.mesh, baseY: capClone.mesh.position.y };
+		cap.current = {
+			mesh: capClone.mesh,
+			baseY: capClone.mesh.position.y,
+			baseScale: capClone.mesh.scale.x,
+		};
 		const capMat = capClone.m;
 		capMat.color.set("#ffffff"); // white, slightly glossy
 		capMat.roughness = 0.3;
@@ -93,11 +107,16 @@ export function LabeledJar({
 		if (!c || !progress) return;
 		const t = timelineAt(progress.get());
 		const lift = t.capLift;
+		const a = capStash ? t.aside : 0;
+		const lx = capOffset[0] * lift;
+		const ly = c.baseY + CAP_LIFT * lift + capOffset[1] * lift;
+		const lz = capOffset[2] * lift;
 		c.mesh.position.set(
-			capOffset[0] * lift,
-			c.baseY + CAP_LIFT * lift + capOffset[1] * lift,
-			capOffset[2] * lift,
+			lx + ((capStash?.[0] ?? lx) - lx) * a,
+			ly + ((capStash?.[1] ?? ly) - ly) * a,
+			lz + ((capStash?.[2] ?? lz) - lz) * a,
 		);
+		c.mesh.scale.setScalar(c.baseScale * (1 + (capStashScale - 1) * a));
 		c.mesh.rotation.set(t.wobble, Math.PI * lift, t.wobble * 0.7);
 	});
 
@@ -155,8 +174,8 @@ export function LabeledJar({
 						roughness={0.4}
 						thickness={0.6}
 						ior={1.3}
-						samples={8}
-						resolution={512}
+						samples={isPoster() ? 32 : 8}
+						resolution={isPoster() ? 2048 : 512}
 						chromaticAberration={0}
 						anisotropicBlur={0.05}
 						distortion={0}
