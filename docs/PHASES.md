@@ -96,20 +96,20 @@ Goal: night → morning story works end to end.
 
 Goal: storyboard look (`docs/design/storyboard/`), desktop 1440x900 and mobile.
 
-- [ ] Docs: decisions, SPEC, colour row, supersessions
-- [ ] Old Phase 4 look removed (moon, split night, cards)
-- [ ] Timeline: 7 scenes, pure, unit tested; `backgroundAt(p)`
-- [ ] Gummy rebuilt in Blender (hero + crowd, sugar normal map)
-- [ ] Ground + contact shadows; green standing, pink lying
-- [ ] Open: caps unscrew, green gummies rise, pink gummies roll out; return
-- [ ] Hero gummy (green 4a, pink 4b), fake translucency, glow
-- [ ] DOF + Bloom in own lazy chunk, high tier only; low-tier fade/shrink
-- [ ] Hero text, background word, hints, socials, blocks, step marker, Numbers + badges
-- [ ] Header nav, anchors (smooth, instant under reduced motion, scene fully in view), mobile menu, About/Contact stubs
-- [ ] Mobile layout
-- [ ] Static sections for reduced motion and tier none
-- [ ] Tests (unit + e2e), `just check`, `just test`, `just lighthouse`
-- [ ] Screenshots every scene, desktop + mobile (`.playwright-mcp/phase4r-*`)
+- [x] Docs: decisions, SPEC, colour row, supersessions
+- [x] Old Phase 4 look removed (moon, split night, cards)
+- [x] Timeline: 7 scenes, pure, unit tested; `backgroundAt(p)`
+- [x] Gummy rebuilt in Blender (hero + crowd, sugar normal map)
+- [x] Ground + contact shadows; green standing, pink lying
+- [x] Open: caps unscrew, green gummies rise, pink gummies roll out; return
+- [x] Hero gummy (green 4a, pink 4b), fake translucency, glow
+- [x] DOF + Bloom in own lazy chunk, high tier only; low-tier fade/shrink
+- [x] Hero text, background word, hints, socials, blocks, step marker, Numbers + badges
+- [x] Header nav, anchors (smooth, instant under reduced motion, scene fully in view), mobile menu, About/Contact stubs
+- [x] Mobile layout
+- [x] Static sections for reduced motion and tier none
+- [x] Tests (unit + e2e), `just check`, `just test`, `just lighthouse`
+- [x] Screenshots every scene, desktop + mobile (`.playwright-mcp/phase4r-*`)
 - [ ] Sam approves
 
 ## Phase 5 — Content

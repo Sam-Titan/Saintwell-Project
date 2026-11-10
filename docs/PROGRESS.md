@@ -4,13 +4,34 @@ Claude Code: add a new entry at the TOP at the end of every session. Keep it sho
 
 ## Current state
 
-- Phase: **4 — Scroll story** built, waiting for Sam's review and approval (see `git log origin/main..main`)
+- Phase: **4R — Redesign** built, waiting for Sam's review and approval (see `git log origin/main..main`)
 - Branch: `main` (only branch)
 - Blockers: none
 
 ---
 
 ## Session log
+
+### 2026-11-10 — Phase 4R (redesign)
+**Done** (D-79 to D-91; SPEC, PHASES checklist, BACKLOG #13)
+- 7 scenes on one pure timeline (hero, settle, open, 4a green hero gummy on olive, 4b pink hero gummy on maroon, return, Numbers on `#2E3723`); `backgroundAt(p)` drives the colour layer and the pink jar's transmission background. Old moon, split night, cards removed.
+- Blender: crowd gummy (320 tris) + hero gummy (5120 tris), baked sugar normal map (WebP). Models + textures 164 KB total. Hero gummy has no transmission (sheen, clearcoat, inner glow).
+- Green jar stands, pink jar lies in front (cap right), contact shadows. Pink gummies roll out, green ones rise; all return. The pink jar stays lying in 4a/4b (as in the brief; the storyboard blur could be read as upright).
+- High tier: Bloom + DepthOfField in their own lazy chunk (Fx, 100 KB raw / 26 KB gz), fetched only on high. Low tier: fade + shrink + glow sprite. Reduced motion and tier none: no canvas, static sections (D-85).
+- Header nav + anchors (Ingredients/Benefits land with the scene fully in view), phone hamburger menu (focus, Esc, scroll lock), About/Contact stubs, Inter 800 (D-89).
+- Bundles (raw / gz): main 397 / 128 KB, HeroScene 168 / 54 KB, looks (three/drei) 918 / 243 KB, Fx 100 / 26 KB.
+- Tests: vitest 43, Playwright 24 pass (each scene's text at its p, nav anchors, phone menu, static modes, no external requests, whole story at high tier). `just check` passes. `just lighthouse` (fallback path): only SEO 83 fails (Phase 5).
+- Screenshots (low tier): `.playwright-mcp/phase4r-d-*.png` (desktop) and `phase4r-m-*.png` (mobile) at p = 0, 14, 26, 46, 66, 78, 100.
+
+**Notes for Sam**
+- No GPU here: high-tier look (DOF, Bloom, real frosted jar) and fps are only checked on real hardware in Phase 6. On low tier the jars fade behind the hero gummy instead of blurring, so block text sits partly over faded jars on desktop.
+- 900vh / 800vh feels long but workable; shorten in Phase 6 if real phones feel slow.
+- Mobile Numbers: faded jars still show faintly behind the badges.
+
+**Next**
+- Sam: review (`git log origin/main..main`), approve, push. Then Phase 5.
+
+---
 
 ### 2026-11-10 — Phase 4 review fixes
 **Done** (D-74 to D-78)
