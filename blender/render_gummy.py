@@ -25,20 +25,20 @@ import build_gummy as bg  # noqa: E402
 
 # colour, jelly colour (SPEC / theme tokens: sage and pink accents), deeper tone for the thick middle
 COLOURS = {
-    "green": ((0x9B, 0xA5, 0x6B), (0.34, 0.42, 0.10)),
-    "pink": ((0xD7, 0x9A, 0xA8), (0.62, 0.20, 0.30)),
+    "green": ((0xAC, 0xC2, 0x58), (0.30, 0.48, 0.04)),
+    "pink": ((0xF0, 0x98, 0xB2), (0.72, 0.10, 0.28)),
 }
 # look variants: absorption density (depth of the thick centre), scatter, rim light power
 VARIANTS = {
     "a": {"absorb": 20.0, "scatter": 1.5, "rim": 70, "rough": 0.12},
-    "b": {"absorb": 45.0, "scatter": 0.5, "rim": 110, "rough": 0.2},
+    "b": {"absorb": 22.0, "scatter": 1.6, "rim": 700, "rough": 0.14},
     "c": {"absorb": 8.0, "scatter": 4.0, "rim": 50, "rough": 0.08},
 }
 # world = scene colour, so the edges glow with it
 WORLD = {"green": (0x3E, 0x4A, 0x2F), "pink": (0x6A, 0x1F, 0x2B)}
-TILT_BASE = math.radians(20)
-TILT_ROCK = math.radians(16)
-WIDTH_M = 0.38  # widest silhouette of the gumdrop (jar units)
+TILT_BASE = math.radians(38)  # camera elevation: the dome top shows (HERO_TILT in gummyPaths.ts)
+TILT_ROCK = math.radians(10)
+WIDTH_M = 0.37  # widest silhouette of the gumdrop (jar units)
 FILL = 0.74  # the gummy spans this share of the frame width (the page sizes the sprite from it)
 
 
@@ -48,78 +48,71 @@ def srgb_to_linear(c):
 
 
 def jelly_material(name, rgb, deep, v):
+    """Smooth jelly (no bump): transmission + subsurface (edges glow in the gummy's own colour), absorption inside
+    (thick centre deeper), and a few sparse, tiny, sharp sugar sparkles."""
     mat = bpy.data.materials.new(name)
     nt = mat.node_tree
     nt.nodes.clear()
     n = nt.nodes
     link = nt.links.new
     lin = [srgb_to_linear(c) for c in rgb]
-    lum = 0.3 * lin[0] + 0.55 * lin[1] + 0.15 * lin[2]
-    base = tuple(max(0.0, lum + (c - lum) * 1.4) for c in lin) + (1.0,)  # saturated
+    base = tuple(lin) + (1.0,)
 
     out = n.new("ShaderNodeOutputMaterial")
     mix = n.new("ShaderNodeMixShader")
 
-    # jelly: translucent, softly glossy, a little subsurface
     jelly = n.new("ShaderNodeBsdfPrincipled")
     jelly.inputs["Base Color"].default_value = base
-    jelly.inputs["Roughness"].default_value = 0.32
-    jelly.inputs["IOR"].default_value = 1.42
-    jelly.inputs["Transmission Weight"].default_value = 0.8
-    jelly.inputs["Subsurface Weight"].default_value = 0.35
-    jelly.inputs["Subsurface Radius"].default_value = (0.2, 0.2, 0.2)
-    jelly.inputs["Subsurface Scale"].default_value = 0.06
-    jelly.inputs["Specular IOR Level"].default_value = 0.45
+    jelly.inputs["Roughness"].default_value = v["rough"]
+    jelly.inputs["IOR"].default_value = 1.45
+    jelly.inputs["Transmission Weight"].default_value = 0.7
+    jelly.inputs["Subsurface Weight"].default_value = 0.8
+    jelly.inputs["Subsurface Radius"].default_value = (0.5, 0.5, 0.5)
+    jelly.inputs["Subsurface Scale"].default_value = 0.09
+    jelly.inputs["Specular IOR Level"].default_value = 0.5
 
-    # sugar crystals: sparse, white, a little glossy
-    sugar = n.new("ShaderNodeBsdfPrincipled")
-    sugar.inputs["Base Color"].default_value = (0.95, 0.95, 0.92, 1.0)
-    sugar.inputs["Roughness"].default_value = 0.4
-    sugar.inputs["Specular IOR Level"].default_value = 0.6
-
+    # sugar sparkle: tiny bright points (emission), well apart
+    sparkle = n.new("ShaderNodeEmission")
+    sparkle.inputs["Color"].default_value = (1.0, 1.0, 0.95, 1.0)
+    sparkle.inputs["Strength"].default_value = 14.0
     coord = n.new("ShaderNodeTexCoord")
-    # fine bumps all over (the sugar coat)
-    vor_bump = n.new("ShaderNodeTexVoronoi")
-    vor_bump.inputs["Scale"].default_value = 520.0
-    vor_bump.inputs["Randomness"].default_value = 1.0
-    bump_ramp = n.new("ShaderNodeMapRange")
-    bump_ramp.inputs["From Min"].default_value = 0.0
-    bump_ramp.inputs["From Max"].default_value = 0.6
-    bump = n.new("ShaderNodeBump")
-    bump.inputs["Strength"].default_value = 0.55
-    bump.inputs["Distance"].default_value = 0.004
-    link(coord.outputs["Object"], vor_bump.inputs["Vector"])
-    link(vor_bump.outputs["Distance"], bump_ramp.inputs["Value"])
-    link(bump_ramp.outputs["Result"], bump.inputs["Height"])
-    link(bump.outputs["Normal"], jelly.inputs["Normal"])
-    link(bump.outputs["Normal"], sugar.inputs["Normal"])
-
-    # which spots are sugar: a coarser Voronoi, thresholded, covers about 30 %
-    vor_mask = n.new("ShaderNodeTexVoronoi")
-    vor_mask.inputs["Scale"].default_value = 330.0
-    vor_mask.inputs["Randomness"].default_value = 1.0
-    vor_mask.inputs["Detail"].default_value = 0.0
+    vor = n.new("ShaderNodeTexVoronoi")
+    vor.inputs["Scale"].default_value = 520.0
+    vor.inputs["Randomness"].default_value = 1.0
     thr = n.new("ShaderNodeMapRange")
-    thr.inputs["From Min"].default_value = 0.30
-    thr.inputs["From Max"].default_value = 0.20
+    thr.inputs["From Min"].default_value = 0.05  # only the centres of a few cells
+    thr.inputs["From Max"].default_value = 0.018
     thr.inputs["To Min"].default_value = 0.0
-    thr.inputs["To Max"].default_value = 0.55
+    thr.inputs["To Max"].default_value = 1.0
     thr.clamp = True
-    link(coord.outputs["Object"], vor_mask.inputs["Vector"])
-    link(vor_mask.outputs["Distance"], thr.inputs["Value"])
-    link(thr.outputs["Result"], mix.inputs["Fac"])
+    # keep only some cells: a second, coarser noise gates them (sparse, uneven)
+    gate = n.new("ShaderNodeTexNoise")
+    gate.inputs["Scale"].default_value = 60.0
+    gate_r = n.new("ShaderNodeMapRange")
+    gate_r.inputs["From Min"].default_value = 0.5
+    gate_r.inputs["From Max"].default_value = 0.62
+    gate_r.clamp = True
+    mulv = n.new("ShaderNodeMath")
+    mulv.operation = "MULTIPLY"
+    link(coord.outputs["Object"], vor.inputs["Vector"])
+    link(coord.outputs["Object"], gate.inputs["Vector"])
+    link(vor.outputs["Distance"], thr.inputs["Value"])
+    link(gate.outputs["Fac"], gate_r.inputs["Value"])
+    link(thr.outputs["Result"], mulv.inputs[0])
+    link(gate_r.outputs["Result"], mulv.inputs[1])
+    link(mulv.outputs["Value"], mix.inputs["Fac"])
 
     link(jelly.outputs["BSDF"], mix.inputs[1])
-    link(sugar.outputs["BSDF"], mix.inputs[2])
+    link(sparkle.outputs["Emission"], mix.inputs[2])
     link(mix.outputs["Shader"], out.inputs["Surface"])
 
     # inside: absorbs (the thick middle gets deeper) and scatters a little (soft glow)
     absorb = n.new("ShaderNodeVolumeAbsorption")
     absorb.inputs["Color"].default_value = tuple(deep) + (1.0,)
-    absorb.inputs["Density"].default_value = 9.0
+    absorb.inputs["Density"].default_value = v["absorb"]
     scatter = n.new("ShaderNodeVolumeScatter")
     scatter.inputs["Color"].default_value = base
-    scatter.inputs["Density"].default_value = 3.0
+    scatter.inputs["Density"].default_value = v["scatter"]
     scatter.inputs["Anisotropy"].default_value = 0.4
     addv = n.new("ShaderNodeAddShader")
     link(absorb.outputs["Volume"], addv.inputs[0])
@@ -128,13 +121,19 @@ def jelly_material(name, rgb, deep, v):
     return mat
 
 
-def add_area(name, loc, target, energy, size, colour=(1, 1, 1)):
+
+
+def add_area(name, loc, target, energy, size, colour=(1, 1, 1), glossy=False):
     data = bpy.data.lights.new(name, "AREA")
     data.energy = energy
     data.size = size
     data.color = colour
+    data.shape = "DISK"
+    if name == "back":
+        data.spread = math.radians(120)
     obj = bpy.data.objects.new(name, data)
     bpy.context.collection.objects.link(obj)
+    obj.visible_glossy = glossy  # big lights must not show up as rectangles in the jelly's reflection
     obj.location = loc
     direction = (target[0] - loc[0], target[1] - loc[1], target[2] - loc[2])
     obj.rotation_euler = mathutils.Vector(direction).to_track_quat("-Z", "Y").to_euler()
@@ -189,9 +188,10 @@ def main():
     scene.camera = cam
 
     # key from upper left front, rim from behind right, small fill
-    add_area("key", (-0.9, -1.2, 1.1), (0, 0, 0), 22, 0.9, (1.0, 0.97, 0.92))
-    rim = add_area("rim", (0.9, 1.4, 0.15), (0, 0, 0), v["rim"], 0.5)
-    add_area("fill", (1.0, -1.4, 0.2), (0, 0, 0), 6, 1.0)
+    add_area("key", (-0.9, -1.2, 1.1), (0, 0, 0), 14, 1.2, (1.0, 0.97, 0.92))
+    add_area("spec", (-0.45, -0.9, 1.5), (0, 0, 0), 9, 0.03, glossy=True)  # one small sharp highlight on the dome
+    rim = add_area("back", (0.0, 1.5, 0.35), (0, 0, 0), v["rim"], 2.2)  # strong backlight
+    add_area("fill", (1.0, -1.4, 0.2), (0, 0, 0), 4, 1.0)
 
     log = []
     t_all = time.time()
@@ -199,6 +199,7 @@ def main():
         mat = jelly_material(f"jelly_{colour}", rgb, deep, v)
         wc = tuple(srgb_to_linear(c) for c in WORLD[colour]) + (1.0,)
         bg_node.inputs["Color"].default_value = wc
+        rim.data.color = tuple(0.35 + 0.65 * c for c in (srgb_to_linear(rgb[0]), srgb_to_linear(rgb[1]), srgb_to_linear(rgb[2])))
         obj = bg.make(f"gummy_{colour}", 5, mat, uv=False)  # smooth, 20480 triangles
         obj.rotation_mode = "ZYX"  # spin about its own vertical axis first, then tilt towards the camera
         for k in todo:

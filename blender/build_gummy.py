@@ -23,9 +23,9 @@ import numpy as np
 
 SAGE = (0x9B / 255, 0xA5 / 255, 0x6B / 255, 1.0)
 RADIUS = 0.18  # half width of the gumdrop
-DOME = 0.15  # height of the domed top above the widest ring
-BASE = 0.05  # depth of the flat-based part below the widest ring
-FLATNESS = 0.45  # < 1 pushes the underside towards a flat plate with a rounded edge
+DOME = 0.19  # height of the domed top above the widest ring (total height ~70 % of the width)
+BASE = 0.06  # depth of the flat-based part below the widest ring
+FLATNESS = 0.6  # < 1 pushes the underside towards a flat plate with a rounded edge
 
 
 def shape(bm):
@@ -36,8 +36,9 @@ def shape(bm):
         p = v.co.copy()
         ang = math.atan2(p.y, p.x)
         wob = 1.0 + 0.04 * math.sin(3 * ang + 0.7) + 0.025 * math.sin(2 * ang + 2.1)
-        v.co.x = RADIUS * wob * p.x
-        v.co.y = RADIUS * wob * p.y
+        taper = 1.0 - 0.16 * max(p.z, 0.0)  # the dome narrows towards the top
+        v.co.x = RADIUS * wob * p.x * taper
+        v.co.y = RADIUS * wob * p.y * taper
         if p.z >= 0:
             v.co.z = DOME * p.z - mid
         else:

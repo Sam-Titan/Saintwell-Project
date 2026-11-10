@@ -10,10 +10,10 @@ export const jars: readonly Look[] = [
 	{ colour: "pink", label: "a" },
 ];
 
-/** Body and gummy colours per jar colour (hex values only from SPEC / theme tokens). */
+/** Body colours from the theme; gummies are a brighter, juicier version of the accents (D-113). */
 export const jarColours = {
-	green: { body: themes.green.night, gummy: themes.green.accent },
-	pink: { body: themes.pink.accent, gummy: themes.pink.accent },
+	green: { body: themes.green.night, gummy: "#acc258" },
+	pink: { body: themes.pink.accent, gummy: "#f098b2" },
 } as const;
 
 export function labelUrl(

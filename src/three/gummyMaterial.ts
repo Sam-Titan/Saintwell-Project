@@ -12,8 +12,8 @@ const TEXTURES = [
 
 /** Pale tints for the rim (lighter versions of the gummy colours, not new brand colours). */
 const TINT = {
-	green: { sheen: "#e9efc6", rim: "#eef3cf" },
-	pink: { sheen: "#f8e3e8", rim: "#fbe9ee" },
+	green: { sheen: "#dcec9a", rim: "#d2e878" },
+	pink: { sheen: "#ffd0de", rim: "#ffb6cd" },
 } as const;
 
 const WRAP_FROM = "vec3 irradiance = dotNL * directLight.color;";
@@ -99,10 +99,11 @@ export function useGummyMaterial(
 				.replace(
 					"#include <emissivemap_fragment>",
 					`#include <emissivemap_fragment>
-					totalEmissiveRadiance += gBase * uInner * ( 0.35 + 0.65 * smoothstep( 0.2, 1.0, gR ) );`,
+					totalEmissiveRadiance += gBase * uInner * ( 0.35 + 0.65 * smoothstep( 0.2, 1.0, gR ) );
+					totalEmissiveRadiance += uRim * pow( gR, 2.2 ) * 0.5;`,
 				);
 		};
-		m.customProgramCacheKey = () => "gummy-jelly-3";
+		m.customProgramCacheKey = () => "gummy-jelly-4";
 		return m;
 	}, [colour, baseColour, normal, specks, rough, normalScale]);
 	useEffect(() => () => material.dispose(), [material]);
