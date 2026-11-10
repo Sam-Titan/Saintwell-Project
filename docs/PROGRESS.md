@@ -4,13 +4,19 @@ Claude Code: add a new entry at the TOP at the end of every session. Keep it sho
 
 ## Current state
 
-- Phase: **2 — 3D models**, review fixes done, waiting for Sam's approval (see `git log origin/main..main`)
+- Phase: **2 — 3D models**, approved; next Phase 3 (see `git log origin/main..main`)
 - Branch: `main` (only branch)
 - Blockers: none
 
 ---
 
 ## Session log
+
+### 2026-11-10 — Gummy smoothness
+**Done**
+- Gummy raised to icosphere subdivision 3: **320 triangles** (was 80). `gummy.glb` 3.5 KB; all models 50 KB of the 2 MB budget. Jar unchanged. Phase 2 approved; next is Phase 3.
+
+---
 
 ### 2026-11-10 — Phase 2 review fixes
 **Done**

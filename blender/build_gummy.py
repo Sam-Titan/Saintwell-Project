@@ -1,4 +1,4 @@
-"""Build one soft rounded gummy (low poly, 80 triangles). Drawn many times with instancing.
+"""Build one soft rounded gummy (low poly, 320 triangles). Drawn many times with instancing.
 
 Run headless:  blender -b --factory-startup --python blender/build_gummy.py -- blender/out/gummy.glb
 
@@ -20,7 +20,7 @@ def main():
     bpy.ops.wm.read_factory_settings(use_empty=True)
 
     bm = bmesh.new()
-    bmesh.ops.create_icosphere(bm, subdivisions=2, radius=1.0)
+    bmesh.ops.create_icosphere(bm, subdivisions=3, radius=1.0)
     k = 2.0 / SQUARENESS
     for v in bm.verts:
         p = v.co.copy()
