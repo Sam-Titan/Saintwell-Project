@@ -23,17 +23,24 @@ const scrollToStory = (page: Page, p: number) =>
 		const s = document.querySelector(
 			"section[data-story-progress]",
 		) as HTMLElement;
-		window.scrollTo(0, s.offsetTop + p * (s.offsetHeight - window.innerHeight));
+		window.scrollTo({
+			top: s.offsetTop + p * (s.offsetHeight - window.innerHeight),
+			behavior: "instant",
+		});
 	}, p);
 
-test("hero text shows, and there is no jar picker", async ({ page }) => {
-	await page.goto("/");
+test("hero text shows (one two-tone h1), and there is no jar picker", async ({
+	page,
+}) => {
+	await page.goto("/?tier=low");
 	await expect(
-		page.getByRole("heading", { level: 1, name: "Melatonin Gummies" }),
+		page.getByRole("heading", { level: 1, name: "Restful Sleep." }),
 	).toBeVisible();
-	await expect(page.getByText("Advanced Sleep Support Formula")).toBeVisible();
+	await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+	await expect(
+		page.getByText("Advanced Sleep Support Formula").first(),
+	).toBeVisible();
 	await expect(page.getByRole("radio")).toHaveCount(0);
-	await expect(page.getByRole("button")).toHaveCount(0);
 });
 
 test("two jars render, no console errors, nothing from outside localhost", async ({
@@ -90,23 +97,18 @@ test("a small wheel scroll does not jump past the open state", async ({
 	expect(await progress(page)).toBeLessThan(0.1);
 });
 
-test("keyboard scrolling (Space, PageDown, arrows) drives the story", async ({
-	page,
-}) => {
-	// low tier: software WebGL here is too slow in high tier to handle key scrolling in time (no GPU)
-	await page.goto("/?tier=low");
-	await page.mouse.click(20, 400);
-	for (const key of ["PageDown", "Space", "ArrowDown", "End"]) {
-		await scrollToStory(page, 0);
-		await expect
-			.poll(() => progress(page), { timeout: 15000 })
-			.toBeLessThan(0.02);
+// low tier: software WebGL here is too slow in high tier to handle key scrolling in time (no GPU).
+// A fresh page per key: Chrome ignores a key scroll right after a programmatic scroll reset.
+for (const key of ["PageDown", "Space", "ArrowDown", "End"]) {
+	test(`keyboard scrolling: ${key} drives the story`, async ({ page }) => {
+		await page.goto("/?tier=low");
+		await page.mouse.click(20, 400);
 		await page.keyboard.press(key);
 		await expect
 			.poll(() => progress(page), { timeout: 30000, message: key })
 			.toBeGreaterThan(key === "ArrowDown" ? 0.005 : 0.1);
-	}
-});
+	});
+}
 
 test("tier=none shows the two fallback jar images, no canvas", async ({
 	page,
@@ -136,19 +138,15 @@ test("tier=low renders without errors", async ({ page }) => {
 	expect(errors).toEqual([]);
 });
 
-test("reduced motion: still jars, no tall scroll story", async ({ page }) => {
+test("reduced motion: no canvas, no tall scroll story (D-85)", async ({
+	page,
+}) => {
 	await page.emulateMedia({ reducedMotion: "reduce" });
 	const errors = collectErrors(page);
 	await page.goto("/?tier=high");
-	await expect(page.locator("canvas[data-engine]").first()).toBeVisible({
-		timeout: 20000,
-	});
-	const box = await page.locator("section[data-story-progress]").boundingBox();
-	expect(box?.height).toBeLessThanOrEqual(page.viewportSize()?.height ?? 0);
-	await expect(page.getByRole("heading", { level: 1 })).toHaveCSS(
-		"opacity",
-		"1",
-	);
+	await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+	await expect(page.locator("canvas[data-engine]")).toHaveCount(0);
+	await expect(page.locator("section[data-story-progress]")).toHaveCount(0);
 	await page.waitForTimeout(1500);
 	expect(errors).toEqual([]);
 });

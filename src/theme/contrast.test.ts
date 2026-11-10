@@ -39,3 +39,32 @@ describe("story colours (D-68)", () => {
 		expect(ratio(themes.green.accent, olive)).toBeLessThan(4.5);
 	});
 });
+
+describe("Phase 4R colours (D-81)", () => {
+	const darkOlive = "#2e3723";
+	const maroon = themes.pink.night;
+	const olive = themes.green.night;
+	/** colour of `fg` at `alpha` over `bg` */
+	const over = (fg: string, bg: string, alpha: number) => {
+		const p = (h: string, i: number) => Number.parseInt(h.slice(i, i + 2), 16);
+		const ch = (i: number) =>
+			Math.round(p(fg, i) * alpha + p(bg, i) * (1 - alpha))
+				.toString(16)
+				.padStart(2, "0");
+		return `#${ch(1)}${ch(3)}${ch(5)}`;
+	};
+	it("white passes AA on the dark olive Numbers background", () => {
+		expect(ratio("#ffffff", darkOlive)).toBeGreaterThanOrEqual(4.5);
+	});
+	it("sage on dark olive passes the 3:1 level (large '5 mg' unit only)", () => {
+		expect(ratio(themes.green.accent, darkOlive)).toBeGreaterThanOrEqual(3);
+	});
+	it("block body text (white at 80%) passes AA on olive and maroon", () => {
+		for (const bg of [olive, maroon])
+			expect(ratio(over("#ffffff", bg, 0.8), bg)).toBeGreaterThanOrEqual(4.5);
+	});
+	it("hero text passes AA on cream: olive 'Restful', maroon 'Sleep.'", () => {
+		expect(ratio(olive, themes.green.cream)).toBeGreaterThanOrEqual(4.5);
+		expect(ratio(maroon, themes.green.cream)).toBeGreaterThanOrEqual(4.5);
+	});
+});

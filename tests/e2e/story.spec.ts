@@ -1,9 +1,18 @@
 import { expect, type Page, test } from "@playwright/test";
 
-const cards = ["Melatonin 5 mg", "Chamomile", "Vitamin B6"];
-const benefits = ["Calm Mind", "Restful Sleep", "Wake Refreshed"];
+const ingredients = [
+	"Melatonin 5 mg",
+	"Chamomile",
+	"Vitamin B6",
+	"Tasty & easy to take",
+];
+const benefits = [
+	"Calm Mind",
+	"Restful Sleep",
+	"Wake Refreshed",
+	"Advanced sleep support formula",
+];
 const badges = ["Vegan", "Gluten Free", "Non GMO"];
-const all = [...cards, ...benefits, ...badges];
 
 const progress = (page: Page) =>
 	page
@@ -16,11 +25,16 @@ const scrollToStory = (page: Page, p: number) =>
 		const s = document.querySelector(
 			"section[data-story-progress]",
 		) as HTMLElement;
-		window.scrollTo(0, s.offsetTop + p * (s.offsetHeight - window.innerHeight));
+		window.scrollTo({
+			top: s.offsetTop + p * (s.offsetHeight - window.innerHeight),
+			behavior: "instant",
+		});
 	}, p);
 
-/** Playwright's toBeVisible ignores opacity, so check the computed opacity of the item. */
-const item = (page: Page, name: string) =>
+/** Playwright's toBeVisible ignores opacity, so check the computed opacity of the revealing wrapper. */
+const block = (page: Page, title: string) =>
+	page.locator("h3", { hasText: title }).first().locator("..");
+const badge = (page: Page, name: string) =>
 	page.locator("li", { hasText: new RegExp(`^${name}`) }).first();
 
 async function goTo(page: Page, p: number) {
@@ -31,79 +45,168 @@ async function goTo(page: Page, p: number) {
 }
 
 // low tier: same story and timeline, fast enough here (no GPU)
-const moments: [number, string][] = [
-	[0.375, "Melatonin 5 mg"],
-	[0.445, "Chamomile"],
-	[0.515, "Vitamin B6"],
-	[0.635, "Calm Mind"],
-	[0.685, "Restful Sleep"],
-	[0.735, "Wake Refreshed"],
-];
-
-for (const [p, name] of moments) {
-	test(`story at p=${p}: only "${name}" is shown`, async ({ page }) => {
-		await page.goto("/?tier=low");
-		await goTo(page, p);
-		await expect(item(page, name)).toHaveCSS("opacity", "1");
-		for (const other of [...cards, ...benefits].filter((n) => n !== name)) {
-			await expect(item(page, other)).toHaveCSS("opacity", "0");
-		}
-		for (const b of badges)
-			await expect(item(page, b)).toHaveCSS("opacity", "0");
-	});
-}
-
-test("night falls and the badges show in the morning", async ({ page }) => {
+test("scene 1 hero text shows at p=0 and is gone in the settled scene", async ({
+	page,
+}) => {
 	await page.goto("/?tier=low");
-	const night = page.locator("[data-night]");
-	await expect(night).toHaveCSS("opacity", "0");
-	await goTo(page, 0.5);
-	await expect(night).toHaveCSS("opacity", "1");
-	await goTo(page, 1);
-	await expect(night).toHaveCSS("opacity", "0");
-	for (const b of badges) await expect(item(page, b)).toHaveCSS("opacity", "1");
-	for (const n of [...cards, ...benefits])
-		await expect(item(page, n)).toHaveCSS("opacity", "0");
-	// and back up: symmetric
-	await goTo(page, 0.5);
-	await expect(night).toHaveCSS("opacity", "1");
-	for (const b of badges) await expect(item(page, b)).toHaveCSS("opacity", "0");
+	const fade = page.getByRole("heading", { level: 1 }).locator("..");
+	await expect(fade).toHaveCSS("opacity", "1");
+	await goTo(page, 0.3);
+	await expect(fade).toHaveCSS("opacity", "0");
+	for (const t of [...ingredients, ...benefits])
+		await expect(block(page, t)).toHaveCSS("opacity", "0");
 });
 
-test("headings Ingredients and Benefits are real h2s", async ({ page }) => {
+test("scene 4a: the four ingredient blocks show, no benefits", async ({
+	page,
+}) => {
 	await page.goto("/?tier=low");
-	await expect(
-		page.getByRole("heading", { level: 2, name: "Ingredients" }),
-	).toHaveCount(1);
-	await expect(
-		page.getByRole("heading", { level: 2, name: "Benefits" }),
-	).toHaveCount(1);
+	await goTo(page, 0.46);
+	for (const t of ingredients)
+		await expect(block(page, t)).toHaveCSS("opacity", "1");
+	for (const t of benefits)
+		await expect(block(page, t)).toHaveCSS("opacity", "0");
+	await expect(page.locator("h2", { hasText: "Ingredients" })).toHaveCSS(
+		"opacity",
+		"1",
+	);
+});
+
+test("scene 4b: the four benefit blocks show, no ingredients", async ({
+	page,
+}) => {
+	await page.goto("/?tier=low");
+	await goTo(page, 0.66);
+	for (const t of benefits)
+		await expect(block(page, t)).toHaveCSS("opacity", "1");
+	for (const t of ingredients)
+		await expect(block(page, t)).toHaveCSS("opacity", "0");
+	await expect(page.locator("h2", { hasText: "Benefits" })).toHaveCSS(
+		"opacity",
+		"1",
+	);
+});
+
+test("scene 6: numbers and badges show, blocks gone; scrolling back reverses", async ({
+	page,
+}) => {
+	await page.goto("/?tier=low");
+	await goTo(page, 1);
+	await expect(page.locator("h2", { hasText: "At a glance" })).toHaveCSS(
+		"opacity",
+		"1",
+	);
+	for (const b of badges)
+		await expect(badge(page, b)).toHaveCSS("opacity", "1");
+	for (const t of [...ingredients, ...benefits])
+		await expect(block(page, t)).toHaveCSS("opacity", "0");
+	await goTo(page, 0.66);
+	for (const b of badges)
+		await expect(badge(page, b)).toHaveCSS("opacity", "0");
+	for (const t of benefits)
+		await expect(block(page, t)).toHaveCSS("opacity", "1");
+});
+
+test("nav links land with their scene fully in view", async ({ page }) => {
+	await page.goto("/?tier=low");
+	await page.getByRole("link", { name: "Ingredients" }).first().click();
+	await expect
+		.poll(() => progress(page), { timeout: 30000 })
+		.toBeCloseTo(0.46, 1);
+	await expect
+		.poll(() => progress(page), { timeout: 30000 })
+		.toBeCloseTo(0.46, 2);
+	for (const t of ingredients)
+		await expect(block(page, t)).toHaveCSS("opacity", "1");
+	await page.getByRole("link", { name: "Benefits" }).first().click();
+	await expect
+		.poll(() => progress(page), { timeout: 30000 })
+		.toBeCloseTo(0.66, 2);
+	for (const t of benefits)
+		await expect(block(page, t)).toHaveCSS("opacity", "1");
+});
+
+test("About and Contact are real sections with an h2", async ({ page }) => {
+	await page.goto("/?tier=low");
+	for (const h of ["About", "Contact"])
+		await expect(page.getByRole("heading", { level: 2, name: h })).toHaveCount(
+			1,
+		);
+});
+
+test.describe("phone menu", () => {
+	test.use({ viewport: { width: 390, height: 844 } });
+
+	test("opens, traps focus, closes on Esc and returns focus, locks scroll", async ({
+		page,
+	}) => {
+		await page.goto("/?tier=low&layout=mobile");
+		const button = page.getByRole("button", { name: "Open menu" });
+		await expect(button).toHaveAttribute("aria-expanded", "false");
+		await button.click();
+		await expect(button).toHaveAttribute("aria-expanded", "true");
+		const dialog = page.getByRole("dialog", { name: "Menu" });
+		await expect(dialog).toBeVisible();
+		await expect(
+			dialog.getByRole("button", { name: "Close menu" }),
+		).toBeFocused();
+		expect(await page.evaluate(() => document.body.style.overflow)).toBe(
+			"hidden",
+		);
+		await page.keyboard.press("Escape");
+		await expect(dialog).toHaveCount(0);
+		await expect(button).toBeFocused();
+		await expect(button).toHaveAttribute("aria-expanded", "false");
+		expect(await page.evaluate(() => document.body.style.overflow)).toBe("");
+	});
+
+	test("tapping a link closes the menu and scrolls to the scene", async ({
+		page,
+	}) => {
+		await page.goto("/?tier=low&layout=mobile");
+		await page.getByRole("button", { name: "Open menu" }).click();
+		await page
+			.getByRole("dialog", { name: "Menu" })
+			.getByRole("link", { name: "Benefits" })
+			.click();
+		await expect(page.getByRole("dialog")).toHaveCount(0);
+		await expect
+			.poll(() => progress(page), { timeout: 30000 })
+			.toBeCloseTo(0.66, 1);
+	});
 });
 
 function expectStatic(label: string) {
-	test(`${label}: every card, benefit and badge is readable as static content`, async ({
+	test(`${label}: everything is readable as static content, no canvas`, async ({
 		page,
 	}) => {
-		for (const h of ["Ingredients", "Benefits"]) {
+		await expect(page.locator("canvas[data-engine]")).toHaveCount(0);
+		await expect(page.locator("section[data-story-progress]")).toHaveCount(0);
+		await expect(
+			page.getByRole("heading", { level: 1, name: "Restful Sleep." }),
+		).toBeVisible();
+		for (const h of ["Ingredients", "Benefits", "At a glance", "About"]) {
 			await expect(
 				page.getByRole("heading", { level: 2, name: h }),
 			).toBeVisible();
 		}
-		for (const name of all) {
-			const el = item(page, name);
+		for (const t of [...ingredients, ...benefits]) {
+			const el = block(page, t);
 			await expect(el).toBeVisible();
 			await expect(el).toHaveCSS("opacity", "1");
 		}
-		// nothing is positioned over a sticky stage and there is no night layer
-		await expect(page.locator("[data-night]")).toHaveCount(0);
-		const box = await page
-			.locator("section[data-story-progress]")
-			.count()
-			.then(async (n) =>
-				n ? page.locator("section[data-story-progress]").boundingBox() : null,
-			);
-		if (box)
-			expect(box.height).toBeLessThanOrEqual(page.viewportSize()?.height ?? 0);
+		for (const b of badges) {
+			await expect(badge(page, b)).toBeVisible();
+			await expect(badge(page, b)).toHaveCSS("opacity", "1");
+		}
+		await expect(
+			page.getByText("with Chamomile & Vitamin B6").last(),
+		).toBeVisible();
+		// nav anchors exist as sections
+		for (const id of ["ingredients", "benefits", "about", "contact"])
+			await expect(page.locator(`#${id}`)).toHaveCount(1);
+		await expect(page.getByRole("img", { name: /green jar/ })).toBeVisible();
+		await expect(page.getByRole("img", { name: /pink jar/ })).toBeVisible();
 	});
 }
 
@@ -120,6 +223,11 @@ test.describe("reduced motion", () => {
 		await page.goto("/?tier=low");
 	});
 	expectStatic("reduced motion");
+
+	test("nav anchor brings the section into view at once", async ({ page }) => {
+		await page.getByRole("link", { name: "Benefits" }).first().click();
+		await expect(page.locator("#benefits")).toBeInViewport({ ratio: 0.3 });
+	});
 });
 
 test("whole story at high tier: no console errors, nothing from outside localhost", async ({
