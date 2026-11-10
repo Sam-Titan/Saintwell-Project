@@ -131,19 +131,21 @@ Goal: storyboard look (`docs/design/storyboard/`), desktop 1440x900 and mobile.
 - [x] Screenshots hero, 4a, 4b, desktop + mobile
 - [ ] Sam approves
 
-## Phase 4R fixes, round 2 (D-106 to D-112)
+## Phase 4R fixes, round 2 (D-106 to D-114)
 
 - [x] Docs: decisions, SPEC, PHASES
-- [ ] Gumdrop shape in Blender (crowd + hero mesh), models rebuilt
-- [ ] Jelly material for the crowd; **one sprite frame per colour + crowd screenshot approved by Sam** (D-112)
-- [ ] Hero turntable sprites (Cycles, 2 x 24 frames, spin + tilt rock), `just sprites`, bytes reported
-- [ ] Hero sprite component, CSS glow, hand-off, reduced motion
-- [ ] 4a/4b blur + frame-rate drop; DOF / Bloom / postprocessing packages removed
-- [ ] Caps rest on the ground, close again; test
-- [ ] Fixed gummy count, none fade; hero seat stays empty
-- [ ] Pink spill beside the jar; collider unit test
-- [ ] Posters re-rendered (`just poster`), shown to Sam before commit
-- [ ] Tests, `just check`, `just test`, screenshots (hero, 3, 4a, 4b; desktop + mobile)
+- [x] Gumdrop shape in Blender (crowd + hero mesh), models rebuilt
+- [x] Jelly material for the crowd; sprite look approved by Sam (D-112)
+- [ ] Hero turntable sprites (Cycles, 2 x 24 frames, spin + tilt rock): `just sprites b`, **Sam runs the render**; then commit `public/sprites/`, check the cross-dissolve for ghosting
+- [x] Hero sprite component, CSS glow, hand-off pose, reduced motion (fail soft until the files exist)
+- [x] 4a/4b blur + frame-rate drop; DOF / Bloom / postprocessing packages removed
+- [x] Caps rest on the ground, close again; tests
+- [x] Fixed gummy count, none fade; hero seat stays empty
+- [x] Pink spill beside the jar; collider unit test
+- [x] Static sections: sprite frame 00 as a still gummy (fail soft)
+- [x] Posters re-rendered (`just poster`): **not committed, waiting for Sam's look**
+- [x] Tests, `just check`, `just test`, screenshots (hero, open, 4a, 4b; desktop + mobile)
+- [ ] Hand-off check with the real sprites (needs the render)
 - [ ] Sam approves
 
 ## Phase 5 — Content

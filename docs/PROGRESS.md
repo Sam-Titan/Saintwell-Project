@@ -12,6 +12,26 @@ Claude Code: add a new entry at the TOP at the end of every session. Keep it sho
 
 ## Session log
 
+### 2026-11-10 — Phase 4R fix round 2 (D-106 to D-114)
+**Done**
+- **Hero gummy = Blender turntable sprite** (Cycles CPU + OIDN; sage-lime / candy pink, smooth jelly, sparse sparkle, backlit, 38 deg + 10 deg rock). `blender/render_gummy.py` is final and committed; `just sprites b` renders 2 x 24 frames at 512 px, 128 samples (about 30 min, **Sam runs it**, README has the nohup command). `HeroSprite` (DOM canvas, cross-dissolve of neighbour frames, CSS glow, reduced motion = frame 0) is built and fails soft: until `public/sprites/` exists the 3D hero mesh stays visible. 3D hero and sprite share one pose function (`heroSpin`, `heroTilt`).
+- **Crowd**: mid-detail gumdrop (1280 tris), rounder base, softer tinted rim, limited tilt.
+- **4a/4b**: CSS blur (9 px desktop / 6 phone) + slight darkening on the canvas wrapper; canvas drops to about 8 fps while the hero gummy has the stage. DepthOfField, Bloom, `Fx.tsx`, `@react-three/postprocessing` and `postprocessing` removed (also from CLAUDE.md's list).
+- **Caps** rest upside down on the ground beside their jars (green left, pink next to the mouth), below the text rows, and go back on at the end (`capDown` in the timeline).
+- **Fixed gummy count** (18 / 8): nothing fades or shrinks; hero-shot floaters are crowd members; the hero's seat is empty only while the hero is out.
+- **Pink spill**: out of the mouth, round to the ground in front of the jar. Collider unit test (hollow cylinder wall, many seeds, 400 steps per gummy).
+- Static sections show sprite frame 00 as a still gummy with alt text (hidden if missing).
+- Tests: vitest 85, Playwright 25 pass; `just check` clean.
+- Screenshots: `.playwright-mcp/phase4r-r2-{d,m}-{hero,open,4a,4b}.png` (the 4a / 4b hero gummy is the 3D mesh until the sprites exist).
+- Posters re-rendered with `just poster`; **not committed** (`public/images/poster-*.webp` modified in the working tree), please look.
+
+**Not done / for Sam**
+- Run the sprite render, then I check the hand-off (3D vs sprite at the same p), the cross-dissolve for ghosting (fallback: 36 frames at 448 px, stepped), bytes (target about 600 KB) and commit `public/sprites/`.
+- No GPU here: real fps and the true frosted-jar look not measured.
+- On phones the pink cap sits partly behind the right-hand text blocks (blurred); desktop is clear (tested).
+
+---
+
 ### 2026-11-10 — GitHub Pages preview (D-103 to D-105)
 **Done**
 - Site works at any base path: `asset()` / `BASE_URL` for every `public/` URL, Vite `base` from `BASE_PATH` (D-103). Checked under `/Saintwell-Project/`: loads, canvas renders, no failed requests except the favicon (Phase 5).
