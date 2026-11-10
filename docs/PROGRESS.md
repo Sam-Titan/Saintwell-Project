@@ -4,13 +4,39 @@ Claude Code: add a new entry at the TOP at the end of every session. Keep it sho
 
 ## Current state
 
-- Phase: **2 — 3D models**, approved; next Phase 3 (see `git log origin/main..main`)
+- Phase: **3 — Hero scene**, built, waiting for Sam's review (see `git log origin/main..main`)
 - Branch: `main` (only branch)
 - Blockers: none
 
 ---
 
 ## Session log
+
+### 2026-11-10 — Phase 3 (hero scene)
+**Done**
+- Hero replaces the Phase 1/2 test pages: header (wide/stacked logo), h1 + subtitle, jar picker (Green/Pink) + label toggle (A/B) as real buttons with radio-group semantics (arrows, roving tabindex), jar turning on cream. State in `JarContext`.
+- `useDeviceTier` per your rules (D-48), `?tier=` override, unit tested. Fallback jar image when no WebGL. Three.js is lazy-loaded.
+- Lightformer studio lighting, no outside requests (Playwright test checks every request is localhost). Green matte, white glossy cap. Pink: frosted `MeshTransmissionMaterial` + gummies (high), semi-transparent `MeshPhysicalMaterial` (low). All 4 labels preloaded; swap is instant.
+- Theme follows the jar through CSS variables (colours, fonts, logo). Loader sits only over the jar area (D-49).
+- Reduced motion (Motion hook): jar still, canvas on demand. Removed AssetTestPage, JarLookViewer, models.spec.
+- Installed `motion` 14.10.1, `r3f-perf` 7.2.3 (D-53). D-48 to D-53 logged. `just check` and `just test` pass (vitest + 6 e2e).
+- Screenshots (all 4 looks, desktop 1440 and mobile 390, reduced motion = front view): `.playwright-mcp/phase3-{green,pink}-{a,b}-{desktop,mobile}.png`. Turning view: `phase3-spin-*.png`.
+
+**Measurements (this WSL machine has no GPU: software WebGL, numbers are pessimistic)**
+- fps, 4s average, dev build with r3f-perf: desktop green high 10, pink high (transmission) 2-3, pink low 16; mobile 390 px, `?tier=low`, 4x CPU throttle: green 15, pink 21. **Not proof of 60 / 30 fps either way**; needs a real GPU and a real phone (Phase 6).
+- Lighthouse mobile, with WebGL (software): **Perf 64**, A11y >= 95, SEO 83. Perf is low only because software rendering keeps the main thread busy (TBT huge); FCP 0.8 s, LCP 0.8 s, CLS 0.
+- Lighthouse with `?tier=none` (no WebGL): Perf 89, A11y 100, Best Practices 100, SEO 83. SEO misses are `meta-description` and `robots.txt` (Phase 5 items).
+- Console: only the known THREE.Clock warning (BACKLOG #11).
+
+**Blockers / questions for Sam**
+- Perf >= 85 cannot be shown on this machine with the 3D scene running. Options: (a) you run `just lighthouse` on a machine with a GPU; (b) treat a software renderer (SwiftShader/llvmpipe via `WEBGL_debug_renderer_info`) as tier `low`/`none`. (b) changes your tier rules, so I did not do it. Which one?
+- `pnpm add` prints `ERR_PNPM_IGNORED_BUILDS` (lefthook, sharp) and warns that `pnpm.onlyBuiltDependencies` in package.json is no longer read by pnpm 12.11.2. This was already so before my changes (same error on the committed lockfile). Installs still work; I left the config alone. Want me to move it to the new place?
+- Pink frosted gummies look blurry on purpose (frosted glass); the label covers the front, so gummies show above/below it and at the back with label A.
+
+**Next**
+- Sam: review screenshots and commits, answer the two questions, approve, push. Then Phase 4 (scroll story).
+
+---
 
 ### 2026-11-10 — Gummy smoothness
 **Done**

@@ -63,16 +63,16 @@ Goal: jar and gummy models ready as React components.
 
 Goal: first screen works fully.
 
-- [ ] Canvas + camera + lighting
-- [ ] Jar slowly turning; cream background
-- [ ] Green jar = opaque matte; pink jar = frosted see-through with gummies inside
-- [ ] Jar picker (Green/Pink) + Label toggle (A/B); 4 looks swap smoothly
-- [ ] Theme switch: colours, fonts, logo follow jar
-- [ ] Header: wide logo desktop, stacked logo mobile
-- [ ] Loading screen with stacked logo
-- [ ] `useDeviceTier` (high/low/no-WebGL) wired in
-- [ ] Keyboard + labels on picker and toggle
-- [ ] fps check on desktop + phone
+- [x] Canvas + camera + lighting
+- [x] Jar slowly turning; cream background
+- [x] Green jar = opaque matte; pink jar = frosted see-through with gummies inside
+- [x] Jar picker (Green/Pink) + Label toggle (A/B); 4 looks swap smoothly
+- [x] Theme switch: colours, fonts, logo follow jar
+- [x] Header: wide logo desktop, stacked logo mobile
+- [x] Loading screen with stacked logo
+- [x] `useDeviceTier` (high/low/no-WebGL) wired in
+- [x] Keyboard + labels on picker and toggle
+- [ ] fps check on desktop + phone (emulation only here, no GPU; real phone in Phase 6, see PROGRESS)
 
 ## Phase 4 — Scroll story
 
