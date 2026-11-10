@@ -10,7 +10,7 @@ import * as THREE from "three";
 import type { JarColour, JarLabel } from "../theme/tokens";
 import { applyLabelFit, createLabelMask, labelBandSize } from "./labelFit";
 import { jarColours, labelUrl } from "./looks";
-import { timeline } from "./storyTimeline";
+import { timelineAt } from "./sceneTime";
 
 /** How far the cap rises when the jar is fully open (jar units). */
 const CAP_LIFT = 1.3;
@@ -25,6 +25,8 @@ type Props = {
 	transmission?: boolean;
 	/** Story scroll progress: lifts and turns the cap (D-59). Undefined = cap stays closed. */
 	progress?: MotionValue<number>;
+	/** Extra cap movement at full lift, in the jar's own frame (the lying jar lifts its cap up and away). */
+	capOffset?: readonly [number, number, number];
 	/** Colour behind the (transparent) canvas, used as the transmission background of the frosted jar. */
 	behind?: THREE.Color;
 } & Omit<React.JSX.IntrinsicElements["group"], "ref">;
@@ -40,6 +42,7 @@ export function LabeledJar({
 	transmission = false,
 	progress,
 	behind,
+	capOffset = [0, 0, 0],
 	...props
 }: Props) {
 	const group = useRef<THREE.Group>(null);
@@ -84,13 +87,18 @@ export function LabeledJar({
 		};
 	}, [mask]);
 
-	// Cap lifts and unscrews with the story.
+	// Cap unscrews and lifts with the story, with a small wobble on the way.
 	useFrame(() => {
 		const c = cap.current;
 		if (!c || !progress) return;
-		const lift = timeline(progress.get()).capLift;
-		c.mesh.position.y = c.baseY + CAP_LIFT * lift;
-		c.mesh.rotation.y = Math.PI * lift;
+		const t = timelineAt(progress.get());
+		const lift = t.capLift;
+		c.mesh.position.set(
+			capOffset[0] * lift,
+			c.baseY + CAP_LIFT * lift + capOffset[1] * lift,
+			capOffset[2] * lift,
+		);
+		c.mesh.rotation.set(t.wobble, Math.PI * lift, t.wobble * 0.7);
 	});
 
 	// Body material follows the jar colour and tier.

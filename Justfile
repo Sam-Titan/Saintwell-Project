@@ -44,9 +44,8 @@ assets:
       pdftocairo -svg -f "$page" -l "$page" "$pdf" "$tmp/$name.svg"
       sed -E -e '/^<rect x="-144"/d' -e "s|^<svg (.*)width=\"[^\"]*\" height=\"[^\"]*\" viewBox=\"[^\"]*\">|<svg \1width=\"$w\" height=\"$h\" viewBox=\"$x $y $w $h\">|" "$tmp/$name.svg" > "public/images/$name.svg"
     done
-    # moon + 2 stars: the three white paths from label A (page 2), cropped, no background
-    pdftocairo -svg -f 2 -l 2 "$pdf" "$tmp/moon.svg"
-    { echo '<svg xmlns="http://www.w3.org/2000/svg" width="120" height="108" viewBox="896 306 120 108">'; grep -E '^<path .*d="M (944\.304688 32|1013\.230469 3|986\.464844 36)' "$tmp/moon.svg"; echo '</svg>'; } > public/images/moon.svg
+    # wide green logo for dark scenes: white "Saint", sage "Well" stays
+    sed -E 's/fill="rgb\(24\.308777%, 29\.019165%, 18\.429565%\)"/fill="#FFFFFF"/' public/images/logo-green-wide.svg > public/images/logo-green-wide-dark.svg
     # stacked logo: recolour brand/logo-stacked.svg (cleaned source, white Saint + sage Well) into 4 versions
     for spec in "green-light 3E4A2F 9BA56B" "green-dark FFFFFF 9BA56B" "pink-light 6A1F2B D79AA8" "pink-dark FFFFFF D79AA8"; do
       read -r name saint well <<<"$spec"
@@ -82,6 +81,10 @@ models:
         "src/three/models/$name.tsx"
       pnpm exec biome check --write --unsafe "src/three/models/$name.tsx" >/dev/null
     done
-    total=$(cat public/models/*.glb | wc -c)
-    echo "models: $total bytes (budget 2097152)"
+    # sugar textures baked by build_gummy.py (normal map + specks), WebP
+    mkdir -p public/textures/gummy
+    cwebp -quiet -q 92 blender/out/sugar-normal.png -o public/textures/gummy/sugar-normal.webp
+    cwebp -quiet -q 85 blender/out/sugar-specks.png -o public/textures/gummy/sugar-specks.webp
+    total=$(cat public/models/*.glb public/textures/gummy/*.webp | wc -c)
+    echo "models + gummy textures: $total bytes (budget 2097152)"
     [ "$total" -le 2097152 ]

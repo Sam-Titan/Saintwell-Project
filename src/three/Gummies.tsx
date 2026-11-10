@@ -4,19 +4,19 @@ import type { MotionValue } from "motion/react";
 import { useCallback, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import type { JarColour } from "../theme/tokens";
+import { useHeroMaterial } from "./gummyMaterial";
 import { jarColours } from "./looks";
+import { type Layout, MOUTH } from "./poses";
 import { rng } from "./random";
-import {
-	FLOAT_Y,
-	gummyPath,
-	gummyProgress,
-	timeline,
-	type Vec3,
-} from "./storyTimeline";
+import { timelineAt } from "./sceneTime";
+import { gummyPath, gummyProgress, smooth, type Vec3 } from "./storyTimeline";
 
-type GummyGLTF = { nodes: { Gummy: THREE.Mesh } };
+export type GummyGLTF = { nodes: { Gummy: THREE.Mesh; GummyHero: THREE.Mesh } };
 
-type Gummy = {
+/** Crowd gummies are drawn this much bigger than the model (jar units), so they read at page size. */
+export const CROWD_SCALE = 1.5;
+
+type Spec = {
 	rest: Vec3;
 	float: Vec3;
 	spin: Vec3;
@@ -24,14 +24,12 @@ type Gummy = {
 	scale: number;
 };
 
-/** Which way each card pulls its gummies (jar units, x): card 1 left, card 2 right, card 3 left. */
-const CARD_SIDE = [-1, 1, -1] as const;
-const CARD_PULL = 1.1;
+/** Standing jar: gummies start stacked inside, rise through the neck and float on a ring around it. */
+const NECK: Vec3 = [0, MOUTH, 0];
+/** The first green gummy floats here; the big hero gummy takes off from (and returns to) this spot. */
+export const GREEN_FLOAT0: Vec3 = [-1.5, 3.4, 0.4];
 
-/** Jar units: radius 1, neck opening at y ~2.45, cap lifts to ~3.9. */
-const NECK: Vec3 = [0, 2.5, 0];
-
-function layout(count: number, seed: number): Gummy[] {
+function standing(count: number, seed: number): Spec[] {
 	const r = rng(seed);
 	return Array.from({ length: count }, (_, i) => {
 		const a = r() * Math.PI * 2;
@@ -41,49 +39,82 @@ function layout(count: number, seed: number): Gummy[] {
 			0.34 + (i / count) * 1.4 + r() * 0.12,
 			Math.sin(a) * rad,
 		];
-		// float on a ring around the axis, clear of the lifted cap (radius 0.93)
 		const fa = (i / count) * Math.PI * 2 + r() * 0.5;
-		const fr = 1.25 + r() * 0.5;
-		const float: Vec3 = [
-			Math.cos(fa) * fr,
-			FLOAT_Y.min + r() * FLOAT_Y.spread,
-			Math.sin(fa) * fr * 0.55,
-		];
+		const fr = 1.3 + r() * 0.55;
+		const float: Vec3 =
+			i === 0
+				? GREEN_FLOAT0
+				: [Math.cos(fa) * fr, 2.7 + r() * 1.1, Math.sin(fa) * fr * 0.6];
 		return {
 			rest,
 			float,
 			spin: [r() * 6.28, r() * 6.28, r() * 6.28],
 			phase: r() * 6.28,
-			scale: 0.9 + r() * 0.25,
+			scale: 0.85 + r() * 0.3,
+		};
+	});
+}
+
+/** Lying jar (unit-local: origin = base centre, axis along +x, ground 1 below the axis). */
+export const GROUND_Y = -1 + 0.2;
+export const PINK_MOUTH: Vec3 = [MOUTH + 0.05, -0.45, 0];
+/** Where the first pink gummy ends up; the pink hero gummy takes off from here. */
+export const PINK_GROUND0: Vec3 = [3.6, GROUND_Y, 1.0];
+
+function lying(count: number, seed: number): Spec[] {
+	const r = rng(seed);
+	return Array.from({ length: count }, (_, i) => {
+		// a pile along the axis, low in the jar (gravity): local y < 0 is towards the ground
+		const along = 0.45 + (i / count) * 1.8 + r() * 0.1;
+		const side = (r() - 0.5) * 0.9;
+		const down = -(0.1 + r() * 0.5);
+		const rest: Vec3 = [along, down, side];
+		const ground: Vec3 =
+			i === 0 ? PINK_GROUND0 : [3.0 + r() * 1.7, GROUND_Y, (r() - 0.35) * 2.6];
+		return {
+			rest,
+			float: ground,
+			spin: [r() * 6.28, r() * 6.28, r() * 6.28],
+			phase: r() * 6.28,
+			scale: 0.85 + r() * 0.3,
 		};
 	});
 }
 
 /**
- * Gummies for one jar, one draw call (InstancedMesh). They start inside the jar, rise through the
- * neck when the jar opens and sink back when it closes, driven by scroll `progress` (D-59).
- * `progress` undefined = still (reduced motion): gummies stay inside the jar.
+ * Crowd of gummies for one jar, one draw call (InstancedMesh), driven by scroll `progress`.
+ * green: rise out of the neck and float. pink: roll out of the mouth of the lying jar onto the ground.
+ * Instance 0 is handed over to the big hero gummy while that one is shown (same position and size,
+ * so the hand-over is seamless).
  */
 export function Gummies({
 	colour,
 	count,
 	progress,
 	seed = 7,
+	shrink = 0,
 }: {
 	colour: JarColour;
 	count: number;
-	progress?: MotionValue<number>;
+	progress: MotionValue<number>;
 	seed?: number;
+	/** low tier: share the crowd shrinks while a hero gummy has the stage */
+	shrink?: number;
 }) {
 	const { nodes } = useGLTF("/models/gummy.glb") as unknown as GummyGLTF;
 	const mesh = useRef<THREE.InstancedMesh>(null);
 	const invalidate = useThree((s) => s.invalidate);
-	const gummies = useMemo(() => layout(count, seed), [count, seed]);
+	const lie = colour === "pink";
+	const gummies = useMemo(
+		() => (lie ? lying(count, seed) : standing(count, seed)),
+		[lie, count, seed],
+	);
 	const material = useMemo(
 		() =>
 			new THREE.MeshStandardMaterial({
 				color: jarColours[colour].gummy,
 				roughness: 0.35,
+				transparent: true,
 			}),
 		[colour],
 	);
@@ -102,41 +133,45 @@ export function Gummies({
 		(p: number, time: number) => {
 			const m = mesh.current;
 			if (!m) return;
-			const tl = timeline(p);
-			// the exported mesh is quantised: its node carries the real scale
-			const base = nodes.Gummy.scale.x;
+			const tl = timelineAt(p);
+			const out = lie ? tl.pinkOut : tl.greenOut;
+			const heroT = lie ? tl.pinkHero : tl.greenHero;
+			const base = nodes.Gummy.scale.x; // the exported mesh is quantised: its node carries the real scale
+			const keep = 1 - shrink * tl.focus;
+			material.opacity = 1 - 0.45 * tl.focus;
 			gummies.forEach((g, i) => {
-				const t = gummyProgress(tl.gummyOut, i, gummies.length);
-				const pos = gummyPath(t, g.rest, NECK, g.float);
-				const bob = Math.sin(time * 1.1 + g.phase) * 0.07 * t;
-				const sway = Math.sin(time * 0.6 + g.phase) * 0.25 * tl.drift;
-				// gummy i belongs to card i % 3 and drifts toward it while that card shows
-				const k = i % 3;
-				const pull = tl.cards[k] * CARD_SIDE[k] * CARD_PULL * t;
-				tmp.p.set(pos[0] + sway + pull, pos[1] + bob, pos[2]);
+				const t = gummyProgress(out, i, gummies.length);
+				const neck = lie ? PINK_MOUTH : NECK;
+				const pos = gummyPath(t, g.rest, neck, g.float, lie ? 0.45 : 0);
+				const afloat = lie ? 0 : t;
+				const bob = Math.sin(time * 1.1 + g.phase) * 0.07 * afloat;
+				tmp.p.set(pos[0], pos[1] + bob, pos[2]);
+				// rolling out: turn around the z axis as it travels along the ground
+				const roll = lie
+					? -(smooth(0.5, 1, t) * (g.float[0] - MOUTH)) / 0.25
+					: 0;
 				tmp.e.set(
-					g.spin[0] + t * 2.2 + time * 0.25 * t,
-					g.spin[1] + t * 3.1,
-					g.spin[2],
+					g.spin[0] + t * 2.2,
+					g.spin[1] + t * 3.1 + (lie ? 0 : time * 0.25 * t),
+					g.spin[2] + roll,
 				);
 				tmp.q.setFromEuler(tmp.e);
-				const s = base * g.scale;
+				const hidden = i === 0 && heroT > 0.001;
+				const s = hidden ? 0 : base * CROWD_SCALE * g.scale * keep;
 				tmp.s.set(s, s, s);
 				m.setMatrixAt(i, tmp.m.compose(tmp.p, tmp.q, tmp.s));
 			});
 			m.instanceMatrix.needsUpdate = true;
 		},
-		[gummies, nodes, tmp],
+		[gummies, nodes, tmp, lie, material, shrink],
 	);
 
 	useLayoutEffect(() => {
-		update(progress ? progress.get() : 0, 0);
+		update(progress.get(), 0);
 		invalidate();
 	}, [update, progress, invalidate]);
 
-	useFrame((state) => {
-		if (progress) update(progress.get(), state.clock.elapsedTime);
-	});
+	useFrame((state) => update(progress.get(), state.clock.elapsedTime));
 
 	return (
 		<instancedMesh
@@ -146,3 +181,55 @@ export function Gummies({
 		/>
 	);
 }
+
+/** A few gummies that float around the hero shot (some small, some big). They fade out as the jars open. */
+export function Ambient({
+	colour,
+	spots,
+	progress,
+}: {
+	colour: JarColour;
+	/** [x, y, z, size] in world units */
+	spots: readonly (readonly [number, number, number, number])[];
+	progress: MotionValue<number>;
+}) {
+	const { nodes } = useGLTF("/models/gummy.glb") as unknown as GummyGLTF;
+	const mesh = useRef<THREE.InstancedMesh>(null);
+	const material = useHeroMaterial(colour, jarColours[colour].gummy);
+	const tmp = useMemo(
+		() => ({
+			m: new THREE.Matrix4(),
+			q: new THREE.Quaternion(),
+			e: new THREE.Euler(),
+			p: new THREE.Vector3(),
+			s: new THREE.Vector3(),
+		}),
+		[],
+	);
+	useFrame((state) => {
+		const m = mesh.current;
+		if (!m) return;
+		const tl = timelineAt(progress.get());
+		const t = state.clock.elapsedTime;
+		const base = nodes.GummyHero.scale.x;
+		material.opacity = 1 - 0.45 * tl.focus;
+		spots.forEach((sp, i) => {
+			tmp.p.set(sp[0], sp[1] + Math.sin(t * 0.8 + i * 2.1) * 0.12, sp[2]);
+			tmp.e.set(0.6 + i + t * 0.2, 1.1 * i + t * 0.15, 0.3 * i);
+			tmp.q.setFromEuler(tmp.e);
+			const s = base * CROWD_SCALE * sp[3] * tl.hero;
+			tmp.s.set(s, s, s);
+			m.setMatrixAt(i, tmp.m.compose(tmp.p, tmp.q, tmp.s));
+		});
+		m.instanceMatrix.needsUpdate = true;
+	});
+	return (
+		<instancedMesh
+			ref={mesh}
+			args={[nodes.GummyHero.geometry, material, spots.length]}
+			frustumCulled={false}
+		/>
+	);
+}
+
+export type { Layout };

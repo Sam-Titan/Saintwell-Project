@@ -1,45 +1,125 @@
-"""Build one soft rounded gummy (low poly, 320 triangles). Drawn many times with instancing.
+"""Build the gummies (Phase 4R, D-83) and bake the sugar surface textures.
+
+Two meshes in one .glb, same shape and size (jar units: body radius = 1.0, gummy ~0.36 wide, ~0.2 thick):
+  Gummy      low poly (320 triangles): drawn many times with instancing (the crowd)
+  GummyHero  detailed (5120 triangles): the one big gummy in the close-up scenes
+
+Also writes two small tiling textures next to the .glb (CPU bake with numpy, no GPU):
+  sugar-normal.png   512 px normal map: tiny sugar crystals
+  sugar-specks.png   256 px grey map: faint base + a few bright specks (used as emissive map)
+`just models` converts them to WebP in public/textures/.
 
 Run headless:  blender -b --factory-startup --python blender/build_gummy.py -- blender/out/gummy.glb
-
-Units match the jar (body radius = 1.0): the gummy is ~0.36 wide and ~0.22 thick. Origin = centre.
 """
 
+import math
+import os
 import sys
 
-import bpy
 import bmesh
+import bpy
+import numpy as np
 
 SAGE = (0x9B / 255, 0xA5 / 255, 0x6B / 255, 1.0)
-HALF = (0.18, 0.18, 0.11)  # half sizes x, y, z
-SQUARENESS = 2.6  # 2 = ellipsoid; higher = squarer, pillow-like
+HALF = (0.18, 0.17, 0.1)  # half sizes x, y, z
+SQUARENESS = 2.4  # 2 = ellipsoid; higher = squarer, pillow-like
+
+
+def shape(bm):
+    """Squarish pillow, slightly lopsided like a real gumdrop. Fixed numbers: same shape every build."""
+    k = 2.0 / SQUARENESS
+    for v in bm.verts:
+        p = v.co.copy()
+        ang = math.atan2(p.y, p.x)
+        wob = 1.0 + 0.05 * math.sin(3 * ang + 0.7) + 0.03 * math.sin(2 * ang + 2.1)
+        v.co.x = HALF[0] * wob * (abs(p.x) ** k) * (1 if p.x >= 0 else -1)
+        v.co.y = HALF[1] * wob * (abs(p.y) ** k) * (1 if p.y >= 0 else -1)
+        v.co.z = HALF[2] * (abs(p.z) ** k) * (1 if p.z >= 0 else -1)
+
+
+def make(name, subdivisions, material, uv):
+    bm = bmesh.new()
+    bmesh.ops.create_icosphere(bm, subdivisions=subdivisions, radius=1.0)
+    shape(bm)
+    mesh = bpy.data.meshes.new(name)
+    bm.to_mesh(mesh)
+    bm.free()
+    for poly in mesh.polygons:
+        poly.use_smooth = True
+    mesh.materials.append(material)
+    obj = bpy.data.objects.new(name, mesh)
+    bpy.context.collection.objects.link(obj)
+    if uv:
+        bpy.context.view_layer.objects.active = obj
+        bpy.ops.object.select_all(action="DESELECT")
+        obj.select_set(True)
+        bpy.ops.object.mode_set(mode="EDIT")
+        bpy.ops.mesh.select_all(action="SELECT")
+        bpy.ops.uv.smart_project(angle_limit=math.radians(66), island_margin=0.02)
+        bpy.ops.object.mode_set(mode="OBJECT")
+    return obj
+
+
+def bake_textures(folder):
+    rng = np.random.default_rng(7)  # fixed seed: same textures every build
+
+    def bumps(n, count, radius):
+        """Wrap-around field of small round crystals, so the texture tiles."""
+        h = np.zeros((n, n), dtype=np.float32)
+        yy, xx = np.mgrid[0:n, 0:n].astype(np.float32)
+        for _ in range(count):
+            cx, cy = rng.uniform(0, n, 2)
+            r = radius * rng.uniform(0.6, 1.4)
+            dx = np.minimum(abs(xx - cx), n - abs(xx - cx))
+            dy = np.minimum(abs(yy - cy), n - abs(yy - cy))
+            d2 = (dx * dx + dy * dy) / (r * r)
+            h += np.where(d2 < 1.0, (1.0 - np.minimum(d2, 1.0)) ** 1.5, 0.0).astype(np.float32)
+        return h
+
+    # normal map from a height field of crystals (gradients wrap, so it tiles)
+    n = 512
+    h = bumps(n, 2600, 5.0)
+    h = h / max(h.max(), 1e-6)
+    gx = (np.roll(h, -1, axis=1) - np.roll(h, 1, axis=1)) * 0.5
+    gy = (np.roll(h, -1, axis=0) - np.roll(h, 1, axis=0)) * 0.5
+    strength = 14.0
+    nx, ny, nz = -gx * strength, -gy * strength, np.ones_like(h)
+    ln = np.sqrt(nx * nx + ny * ny + nz * nz)
+    rgb = np.stack([nx / ln, ny / ln, nz / ln], axis=-1) * 0.5 + 0.5
+    write_image("sugar-normal", os.path.join(folder, "sugar-normal.png"), rgb, n)
+
+    # specks: faint base (inner glow) + a few bright dots
+    m = 256
+    s = bumps(m, 70, 1.6)
+    s = np.clip(s * 1.6, 0.0, 1.0)
+    grey = 0.18 + 0.82 * s
+    write_image("sugar-specks", os.path.join(folder, "sugar-specks.png"), np.stack([grey] * 3, axis=-1), m)
+
+
+def write_image(name, path, rgb, size):
+    img = bpy.data.images.new(name, size, size, alpha=False)
+    img.colorspace_settings.name = "Non-Color"  # set first: changing it later clears the pixels
+    flat = np.ones((size, size, 4), dtype=np.float32)
+    flat[..., :3] = rgb
+    img.pixels[:] = flat.ravel().tolist()
+    img.filepath_raw = path
+    img.file_format = "PNG"
+    img.save()
 
 
 def main():
     out = sys.argv[sys.argv.index("--") + 1]
     bpy.ops.wm.read_factory_settings(use_empty=True)
 
-    bm = bmesh.new()
-    bmesh.ops.create_icosphere(bm, subdivisions=3, radius=1.0)
-    k = 2.0 / SQUARENESS
-    for v in bm.verts:
-        p = v.co.copy()
-        v.co.x = HALF[0] * (abs(p.x) ** k) * (1 if p.x >= 0 else -1)
-        v.co.y = HALF[1] * (abs(p.y) ** k) * (1 if p.y >= 0 else -1)
-        v.co.z = HALF[2] * (abs(p.z) ** k) * (1 if p.z >= 0 else -1)
-    mesh = bpy.data.meshes.new("Gummy")
-    bm.to_mesh(mesh)
-    bm.free()
-    for p in mesh.polygons:
-        p.use_smooth = True
-    obj = bpy.data.objects.new("Gummy", mesh)
-    bpy.context.collection.objects.link(obj)
-
-    m = bpy.data.materials.new("gummy")
-    bsdf = m.node_tree.nodes["Principled BSDF"]
+    mat = bpy.data.materials.new("gummy")
+    bsdf = mat.node_tree.nodes["Principled BSDF"]
     bsdf.inputs["Base Color"].default_value = SAGE
     bsdf.inputs["Roughness"].default_value = 0.35
-    mesh.materials.append(m)
+
+    make("Gummy", 3, mat, uv=False)  # 320 triangles
+    make("GummyHero", 4, mat, uv=True)  # 5120 triangles
+
+    bake_textures(os.path.dirname(os.path.abspath(out)))
 
     bpy.ops.object.select_all(action="SELECT")
     bpy.ops.export_scene.gltf(
@@ -49,6 +129,7 @@ def main():
         export_apply=True,
         export_yup=True,
         export_normals=True,
+        export_texcoords=True,
         export_materials="EXPORT",
     )
     print(f"gummy exported to {out}")
