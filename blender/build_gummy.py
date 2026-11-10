@@ -1,7 +1,7 @@
 """Build the gummies (Phase 4R, D-83) and bake the sugar surface textures.
 
 Two meshes in one .glb, same gumdrop shape and size (jar units: body radius = 1.0, gummy ~0.36 wide, ~0.2 tall, flat base down):
-  Gummy      low poly (320 triangles): drawn many times with instancing (the crowd)
+  Gummy      mid detail (1280 triangles, rounder base edge): drawn many times with instancing (the crowd)
   GummyHero  detailed (5120 triangles): the one big gummy in the close-up scenes
 
 Also writes two small tiling textures next to the .glb (CPU bake with numpy, no GPU):
@@ -28,10 +28,10 @@ BASE = 0.06  # depth of the flat-based part below the widest ring
 FLATNESS = 0.6  # < 1 pushes the underside towards a flat plate with a rounded edge
 
 
-def shape(bm):
+def shape(bm, flatness=FLATNESS, base=BASE):
     """Gumdrop (D-107): round in plan, flat base, domed top. Fixed numbers: same shape every build.
     Centred on its bounding box so it rotates about its middle."""
-    mid = (DOME - BASE) / 2
+    mid = (DOME - base) / 2
     for v in bm.verts:
         p = v.co.copy()
         ang = math.atan2(p.y, p.x)
@@ -42,13 +42,13 @@ def shape(bm):
         if p.z >= 0:
             v.co.z = DOME * p.z - mid
         else:
-            v.co.z = -BASE * (-p.z) ** FLATNESS - mid
+            v.co.z = -base * (-p.z) ** flatness - mid
 
 
-def make(name, subdivisions, material, uv):
+def make(name, subdivisions, material, uv, flatness=FLATNESS, base=BASE):
     bm = bmesh.new()
     bmesh.ops.create_icosphere(bm, subdivisions=subdivisions, radius=1.0)
-    shape(bm)
+    shape(bm, flatness, base)
     mesh = bpy.data.meshes.new(name)
     bm.to_mesh(mesh)
     bm.free()
@@ -129,8 +129,8 @@ def main():
     # a second material keeps gltf-transform from joining the two meshes into one
     mat_crowd = mat.copy()
     mat_crowd.name = "gummy_crowd"
-    make("Gummy", 3, mat_crowd, uv=True)  # 320 triangles (UVs: the crowd shares the sugar maps)
-    make("GummyHero", 4, mat, uv=True)  # 5120 triangles
+    make("Gummy", 4, mat_crowd, uv=True, flatness=0.95, base=0.085)  # 1280 triangles, rounder base edge (D-114)
+    make("GummyHero", 5, mat, uv=True)  # 5120 triangles, the sprite's shape
 
     bake_textures(os.path.dirname(os.path.abspath(out)))
 

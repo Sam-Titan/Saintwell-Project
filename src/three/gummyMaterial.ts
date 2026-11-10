@@ -12,8 +12,8 @@ const TEXTURES = [
 
 /** Pale tints for the rim (lighter versions of the gummy colours, not new brand colours). */
 const TINT = {
-	green: { sheen: "#dcec9a", rim: "#d2e878" },
-	pink: { sheen: "#ffd0de", rim: "#ffb6cd" },
+	green: { sheen: "#c6d878", rim: "#c4d870" },
+	pink: { sheen: "#f6b4c6", rim: "#f6a6bd" },
 } as const;
 
 const WRAP_FROM = "vec3 irradiance = dotNL * directLight.color;";
@@ -50,7 +50,7 @@ export function useGummyMaterial(
 			map: specks,
 			clearcoat: 0,
 			specularIntensity: 0.45,
-			sheen: 0.6,
+			sheen: 0.3,
 			sheenRoughness: 0.55,
 			sheenColor: new THREE.Color(TINT[colour].sheen),
 			envMapIntensity: 0.55,
@@ -94,16 +94,16 @@ export function useGummyMaterial(
 					gBase = diffuseColor.rgb;
 					vec3 gDeep = pow( gBase, vec3( 2.4 ) ) * 0.8;
 					vec3 gCol = mix( gDeep, gBase, smoothstep( 0.05, 0.8, gR ) );
-					diffuseColor.rgb = mix( gCol, uRim, pow( gR, 2.0 ) * 0.75 );`,
+					diffuseColor.rgb = mix( gCol, uRim, pow( gR, 2.6 ) * 0.4 );`,
 				)
 				.replace(
 					"#include <emissivemap_fragment>",
 					`#include <emissivemap_fragment>
 					totalEmissiveRadiance += gBase * uInner * ( 0.35 + 0.65 * smoothstep( 0.2, 1.0, gR ) );
-					totalEmissiveRadiance += uRim * pow( gR, 2.2 ) * 0.5;`,
+					totalEmissiveRadiance += uRim * pow( gR, 2.6 ) * 0.18;`,
 				);
 		};
-		m.customProgramCacheKey = () => "gummy-jelly-4";
+		m.customProgramCacheKey = () => "gummy-jelly-5";
 		return m;
 	}, [colour, baseColour, normal, specks, rough, normalScale]);
 	useEffect(() => () => material.dispose(), [material]);
