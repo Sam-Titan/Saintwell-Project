@@ -6,7 +6,8 @@ Two meshes in one .glb, same shape and size (jar units: body radius = 1.0, gummy
 
 Also writes two small tiling textures next to the .glb (CPU bake with numpy, no GPU):
   sugar-normal.png   512 px normal map: tiny sugar crystals
-  sugar-specks.png   256 px grey map: faint base + a few bright specks (used as emissive map)
+  sugar-specks.png   512 px grey map: black with sparse sugar sparkles (whitens the colour, D-98)
+  sugar-rough.png    512 px roughness map (G channel): matte grain, small shiny points at the sparkles
 `just models` converts them to WebP in public/textures/.
 
 Run headless:  blender -b --factory-startup --python blender/build_gummy.py -- blender/out/gummy.glb
@@ -88,12 +89,14 @@ def bake_textures(folder):
     rgb = np.stack([nx / ln, ny / ln, nz / ln], axis=-1) * 0.5 + 0.5
     write_image("sugar-normal", os.path.join(folder, "sugar-normal.png"), rgb, n)
 
-    # specks: faint base (inner glow) + a few bright dots
-    m = 256
-    s = bumps(m, 70, 1.6)
-    s = np.clip(s * 1.6, 0.0, 1.0)
-    grey = 0.18 + 0.82 * s
-    write_image("sugar-specks", os.path.join(folder, "sugar-specks.png"), np.stack([grey] * 3, axis=-1), m)
+    # sparkles: sparse bright dots on black (the colour map whitens the gummy colour there)
+    sp = np.clip(bumps(n, 260, 3.0) * 1.8, 0.0, 1.0)
+    write_image("sugar-specks", os.path.join(folder, "sugar-specks.png"), np.stack([sp] * 3, axis=-1), n)
+
+    # roughness (G channel): matte everywhere, a little smoother on crystal tops, glints at the sparkles
+    rough = np.clip(0.94 - 0.2 * h - 0.4 * sp, 0.3, 1.0)
+    rgb_r = np.stack([np.zeros_like(rough), rough, np.zeros_like(rough)], axis=-1)
+    write_image("sugar-rough", os.path.join(folder, "sugar-rough.png"), rgb_r, n)
 
 
 def write_image(name, path, rgb, size):
@@ -114,9 +117,12 @@ def main():
     mat = bpy.data.materials.new("gummy")
     bsdf = mat.node_tree.nodes["Principled BSDF"]
     bsdf.inputs["Base Color"].default_value = SAGE
-    bsdf.inputs["Roughness"].default_value = 0.35
+    bsdf.inputs["Roughness"].default_value = 0.9
 
-    make("Gummy", 3, mat, uv=False)  # 320 triangles
+    # a second material keeps gltf-transform from joining the two meshes into one
+    mat_crowd = mat.copy()
+    mat_crowd.name = "gummy_crowd"
+    make("Gummy", 3, mat_crowd, uv=True)  # 320 triangles (UVs: the crowd shares the sugar maps)
     make("GummyHero", 4, mat, uv=True)  # 5120 triangles
 
     bake_textures(os.path.dirname(os.path.abspath(out)))

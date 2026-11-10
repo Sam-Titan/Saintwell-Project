@@ -6,55 +6,99 @@ import type { JarColour } from "../theme/tokens";
 const TEXTURES = [
 	"/textures/gummy/sugar-normal.webp",
 	"/textures/gummy/sugar-specks.webp",
+	"/textures/gummy/sugar-rough.webp",
 ];
 
-/** Pale tints for the inner glow / sheen (lighter versions of the gummy colours, not new brand colours). */
+/** Pale tints for the rim (lighter versions of the gummy colours, not new brand colours). */
 const TINT = {
-	green: { glow: "#dfe6b4", sheen: "#e9efc6" },
-	pink: { glow: "#f3d3da", sheen: "#f8e3e8" },
+	green: { sheen: "#e9efc6", rim: "#eef3cf" },
+	pink: { sheen: "#f8e3e8", rim: "#fbe9ee" },
 } as const;
 
 /**
- * Hero gummy material (D-83): NO transmission. The translucent look is faked: sheen, clearcoat and an
- * emissive inner glow (faint base + bright sugar specks from the specks map). Sugar surface = baked
- * normal map. Same on every tier.
+ * Gummy material (D-98): matte and sugar-dusted, never glossy. High roughness (baked roughness map, a few small
+ * glints at the sparkles), no clearcoat, subtle sheen, low reflections. Sugar surface = baked normal map; sparse
+ * sparkles whiten the colour map. Translucency is faked in the shader: darker core, lighter rim (no transmission,
+ * D-83). `glow` (hero gummy only) adds a bright HDR rim that Bloom picks up: nothing else reaches the threshold.
  */
-export function useHeroMaterial(
+export function useGummyMaterial(
 	colour: JarColour,
 	baseColour: string,
+	{
+		glow = 0,
+		normalScale = 0.55,
+	}: { glow?: number; normalScale?: number } = {},
 ): THREE.MeshPhysicalMaterial {
-	const [normal, specks] = useTexture(TEXTURES) as THREE.Texture[];
+	const [normal, specks, rough] = useTexture(TEXTURES) as THREE.Texture[];
 	useEffect(() => {
-		for (const t of [normal, specks]) {
+		for (const t of [normal, specks, rough]) {
 			t.wrapS = t.wrapT = THREE.RepeatWrapping;
 			t.repeat.set(5, 5);
 			t.colorSpace = THREE.NoColorSpace;
 			t.anisotropy = 4;
 			t.needsUpdate = true;
 		}
-	}, [normal, specks]);
-	const material = useMemo(
-		() =>
-			new THREE.MeshPhysicalMaterial({
-				color: baseColour,
-				roughness: 0.4,
-				clearcoat: 0.9,
-				clearcoatRoughness: 0.22,
-				sheen: 1,
-				sheenRoughness: 0.45,
-				sheenColor: new THREE.Color(TINT[colour].sheen),
-				normalMap: normal,
-				normalScale: new THREE.Vector2(0.55, 0.55),
-				emissive: new THREE.Color(TINT[colour].glow),
-				emissiveMap: specks,
-				emissiveIntensity: 0.9,
-				transparent: true,
-			}),
-		[colour, baseColour, normal, specks],
-	);
+	}, [normal, specks, rough]);
+	const material = useMemo(() => {
+		const m = new THREE.MeshPhysicalMaterial({
+			color: baseColour,
+			roughness: 1,
+			roughnessMap: rough,
+			map: specks,
+			clearcoat: 0,
+			sheen: 0.35,
+			sheenRoughness: 0.8,
+			sheenColor: new THREE.Color(TINT[colour].sheen),
+			envMapIntensity: 0.45,
+			normalMap: normal,
+			normalScale: new THREE.Vector2(normalScale, normalScale),
+			transparent: true,
+		});
+		const rim = new THREE.Color(TINT[colour].rim);
+		m.onBeforeCompile = (shader) => {
+			shader.uniforms.uRim = { value: rim };
+			shader.uniforms.uGlow = { value: glow };
+			shader.fragmentShader = shader.fragmentShader
+				.replace(
+					"#include <common>",
+					"#include <common>\nuniform vec3 uRim;\nuniform float uGlow;\nfloat gRim;",
+				)
+				// the colour map holds sparkles on black: whiten the colour there (instead of multiplying)
+				.replace(
+					"#include <map_fragment>",
+					`#ifdef USE_MAP
+					float sp = texture2D( map, vMapUv ).r;
+					diffuseColor.rgb = mix( diffuseColor.rgb, vec3( 1.0 ), sp * 0.6 );
+					#endif`,
+				)
+				// fake translucency: darker core, lighter rim
+				.replace(
+					"#include <normal_fragment_maps>",
+					`#include <normal_fragment_maps>
+					float gNV = clamp( abs( dot( normalize( normal ), normalize( vViewPosition ) ) ), 0.0, 1.0 );
+					gRim = pow( 1.0 - gNV, 2.2 );
+					diffuseColor.rgb = mix( diffuseColor.rgb * 0.8, mix( diffuseColor.rgb, uRim, 0.4 ), gRim );`,
+				)
+				.replace(
+					"#include <emissivemap_fragment>",
+					`#include <emissivemap_fragment>
+					totalEmissiveRadiance += uRim * gRim * uGlow;`,
+				);
+		};
+		m.customProgramCacheKey = () => `gummy-${glow}`;
+		return m;
+	}, [colour, baseColour, normal, specks, rough, glow, normalScale]);
 	useEffect(() => () => material.dispose(), [material]);
 	return material;
 }
+
+/** The hero gummy: same material with the HDR rim glow for Bloom. */
+export const useHeroMaterial = (
+	colour: JarColour,
+	baseColour: string,
+	/** high: the rim goes just above the Bloom threshold; low: no Bloom, only a faint lift */
+	high: boolean,
+) => useGummyMaterial(colour, baseColour, { glow: high ? 1.5 : 0.2 });
 
 /** Soft radial glow (low tier sprite behind the hero gummy; high tier uses Bloom instead). */
 export function glowTexture(): THREE.CanvasTexture {

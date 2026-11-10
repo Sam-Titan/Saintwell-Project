@@ -13,7 +13,7 @@ type GLTFResult = {
 		GummyHero: THREE.Mesh;
 	};
 	materials: {
-		gummy: THREE.MeshStandardMaterial;
+		gummy_crowd: THREE.MeshStandardMaterial;
 	};
 };
 
@@ -26,14 +26,14 @@ export function Gummy(props: React.JSX.IntrinsicElements["group"]) {
 			<mesh
 				name="Gummy"
 				geometry={nodes.Gummy.geometry}
-				material={materials.gummy}
+				material={materials.gummy_crowd}
 				position={[0.005, 0, 0.005]}
 				scale={0.185}
 			/>
 			<mesh
 				name="GummyHero"
 				geometry={nodes.GummyHero.geometry}
-				material={materials.gummy}
+				material={materials.gummy_crowd}
 				position={[0.005, 0, 0.005]}
 				scale={0.186}
 			/>
