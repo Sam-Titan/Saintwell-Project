@@ -1,10 +1,12 @@
-import AssetTestPage from "./components/AssetTestPage";
+import Header from "./components/Header";
+import Hero from "./components/Hero";
 import { JarProvider } from "./theme/JarContext";
 
 export default function App() {
 	return (
 		<JarProvider>
-			<AssetTestPage />
+			<Header />
+			<Hero />
 		</JarProvider>
 	);
 }
