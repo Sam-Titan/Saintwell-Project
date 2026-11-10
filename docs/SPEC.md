@@ -81,10 +81,10 @@ Header: wide logo on desktop, stacked logo on mobile. Loading screen: stacked lo
 - **Jar:** body + white screw cap + label as a separate mesh/material (texture swaps for 4 looks).
   - Green: opaque matte olive.
   - Pink: frosted, see-through, gummies visible inside (drei transmission material on high tier; frosted look without real transparency on low tier).
-- **Gummy:** one soft rounded shape, coloured to match the jar. Drawn with instancing.
+- **Gummy:** a gumdrop (round in plan, flat base, domed top, D-107), coloured to match the jar. Crowd drawn with instancing; fixed count per jar, none fade (D-110).
 - Lighting done in the browser (no baked renders; laptop has no GPU).
-- Background drawn inside the scene (D-94). Glow: a radial plane behind the hero gummy on all tiers; Bloom (hero gummy only) and DOF only in 4a/4b, high tier, always mounted with passes off elsewhere (D-97).
-- Gummy: matte, sugar-dusted (D-98).
+- Background drawn inside the scene (D-94). In 4a/4b the canvas is CSS-blurred and drops to about 8 fps; no DOF, no Bloom (D-108). The hero gummy is a pre-rendered Blender turntable sprite (D-106) with a CSS radial glow.
+- Gummy: fake jelly, sugar-dusted, never glossy (D-98, D-107). Caps settle on the ground beside their jars (D-109). Pink gummies land beside the jar, never through it (D-111).
 
 ### Device tiers
 

@@ -131,6 +131,21 @@ Goal: storyboard look (`docs/design/storyboard/`), desktop 1440x900 and mobile.
 - [x] Screenshots hero, 4a, 4b, desktop + mobile
 - [ ] Sam approves
 
+## Phase 4R fixes, round 2 (D-106 to D-112)
+
+- [x] Docs: decisions, SPEC, PHASES
+- [ ] Gumdrop shape in Blender (crowd + hero mesh), models rebuilt
+- [ ] Jelly material for the crowd; **one sprite frame per colour + crowd screenshot approved by Sam** (D-112)
+- [ ] Hero turntable sprites (Cycles, 2 x 24 frames, spin + tilt rock), `just sprites`, bytes reported
+- [ ] Hero sprite component, CSS glow, hand-off, reduced motion
+- [ ] 4a/4b blur + frame-rate drop; DOF / Bloom / postprocessing packages removed
+- [ ] Caps rest on the ground, close again; test
+- [ ] Fixed gummy count, none fade; hero seat stays empty
+- [ ] Pink spill beside the jar; collider unit test
+- [ ] Posters re-rendered (`just poster`), shown to Sam before commit
+- [ ] Tests, `just check`, `just test`, screenshots (hero, 3, 4a, 4b; desktop + mobile)
+- [ ] Sam approves
+
 ## Phase 5 — Content
 
 Goal: all text and non-3D sections finished.
