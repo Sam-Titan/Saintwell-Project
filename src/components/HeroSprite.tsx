@@ -97,7 +97,8 @@ export default function HeroSprite({
 						1) *
 					SPRITE_FRAMES;
 			const a = Math.floor(f) % SPRITE_FRAMES;
-			const w = Math.round((f - Math.floor(f)) * 8) / 8;
+			// mostly the sharp frame, a quick dissolve to the next one (keeps double edges short-lived)
+			const w = Math.round(smooth(0.3, 0.7, f - Math.floor(f)) * 8) / 8;
 			const key = `${a}:${w}`;
 			if (key === last) return;
 			last = key;
