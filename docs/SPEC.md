@@ -60,9 +60,9 @@ A one-page brand website for SAINTWELL, featuring a 3D Melatonin Gummies jar and
 
 ## 4. Page sections (scroll story, Phase 4R, D-79)
 
-One sticky stage, native scroll, 900vh (800vh below 640 px). Everything is a pure function of progress `p`; scrolling up plays it in reverse.
+One sticky stage, native scroll, 800vh (700vh below 640 px, D-95). Everything is a pure function of progress `p`; scrolling up plays it in reverse.
 
-1. **Hero** — cream. Green jar stands, pink jar lies in front (cap right), soft contact shadows, floating gummies. Two-tone `h1` "Restful" (olive) / "Sleep." (maroon) with the label lines under each. Giant faint "SAINTWELL" behind, scroll hints, social icons, "30 GUMMIES · NUTRACEUTICAL".
+1. **Hero** — cream. A static poster of the scene (D-92/93) with the headline over it; the 3D loads behind it and cross-fades in on first scroll. Green jar stands left of centre, pink jar lies in front-right (cap right, ~25 % overlap, D-96), soft contact shadows, floating gummies. Two-tone `h1` "Restful" (olive) / "Sleep." (maroon) with the label lines under each. Giant faint "SAINTWELL" behind, scroll hints, social icons, "30 GUMMIES · NUTRACEUTICAL".
 2. **Spin and settle** — jars spin slowly, move down and closer; headline fades out.
 3. **Open** — caps unscrew; green gummies rise out of the neck, pink gummies roll out onto the ground.
 4a. **Ingredients** (olive) — one big sage gummy at the centre, rest blurred. Blocks left: Melatonin 5 mg, Chamomile; right: Vitamin B6, "Tasty & easy to take". `h2` eyebrow "INGREDIENTS", step marker "01 INGREDIENTS / 02 BENEFITS".
@@ -83,7 +83,8 @@ Header: wide logo on desktop, stacked logo on mobile. Loading screen: stacked lo
   - Pink: frosted, see-through, gummies visible inside (drei transmission material on high tier; frosted look without real transparency on low tier).
 - **Gummy:** one soft rounded shape, coloured to match the jar. Drawn with instancing.
 - Lighting done in the browser (no baked renders; laptop has no GPU).
-- Glow (postprocessing) on moon/stars only, high tier only.
+- Background drawn inside the scene (D-94). Glow: a radial plane behind the hero gummy on all tiers; Bloom (hero gummy only) and DOF only in 4a/4b, high tier, always mounted with passes off elsewhere (D-97).
+- Gummy: matte, sugar-dusted (D-98).
 
 ### Device tiers
 

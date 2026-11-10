@@ -112,6 +112,25 @@ Goal: storyboard look (`docs/design/storyboard/`), desktop 1440x900 and mobile.
 - [x] Screenshots every scene, desktop + mobile (`.playwright-mcp/phase4r-*`)
 - [ ] Sam approves
 
+## Phase 4R fixes — Sam's GPU review (D-92 to D-102)
+
+- [ ] Docs: decisions, SPEC, PHASES
+- [ ] Timeline re-timed (caps open within ~100vh, no dead time), 800vh / 700vh, pure + tested
+- [ ] Jar layout: green left, pink front-right (~25 % overlap), labels readable, mobile scaled
+- [ ] Background inside the scene (no black on high), word plane, glow, bloom hero-only
+- [ ] Caps and gummies stay out of the text columns; floaters out of the headline rows
+- [ ] Gummy look: matte, sugar-dusted (hero + crowd)
+- [ ] Effects precompiled at idle, always mounted, passes off outside 4a/4b
+- [ ] ContactShadows fixed, dpr 1.5, r3f-perf lazy dev only, `?fps=1`, `just preview`
+- [ ] Posters (`just poster`), shown to Sam before commit; preloaded (both sizes)
+- [ ] Poster hero, lazy 3D cross-fade, loader removed
+- [ ] Critically damped progress smoothing
+- [ ] Hero label on one line
+- [ ] Lighthouse temp dirs fixed + ignored
+- [ ] Tests, `just check`, `just test`, `just lighthouse`
+- [ ] Screenshots hero, 4a, 4b, desktop + mobile
+- [ ] Sam approves
+
 ## Phase 5 — Content
 
 Goal: all text and non-3D sections finished.
