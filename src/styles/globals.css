@@ -1,6 +1,65 @@
 @import "tailwindcss";
 
+@font-face {
+	font-family: "Poppins";
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url("/fonts/poppins-400.woff2") format("woff2");
+}
+
+@font-face {
+	font-family: "Poppins";
+	font-style: normal;
+	font-weight: 500;
+	font-display: swap;
+	src: url("/fonts/poppins-500.woff2") format("woff2");
+}
+
+@font-face {
+	font-family: "Poppins";
+	font-style: normal;
+	font-weight: 700;
+	font-display: swap;
+	src: url("/fonts/poppins-700.woff2") format("woff2");
+}
+
+@font-face {
+	font-family: "Lora";
+	font-style: normal;
+	font-weight: 700;
+	font-display: swap;
+	src: url("/fonts/lora-700.woff2") format("woff2");
+}
+
+@font-face {
+	font-family: "Lora";
+	font-style: italic;
+	font-weight: 700;
+	font-display: swap;
+	src: url("/fonts/lora-700-italic.woff2") format("woff2");
+}
+
+/* Inter ships as one variable file covering 400, 500 and 700 */
+@font-face {
+	font-family: "Inter";
+	font-style: normal;
+	font-weight: 400 700;
+	font-display: swap;
+	src: url("/fonts/inter-latin-variable.woff2") format("woff2");
+}
+
 @theme {
-	--color-cream: #f8f5ec;
 	--color-olive: #3e4a2f;
+	--color-sage: #9ba56b;
+	--color-maroon: #6a1f2b;
+	--color-pink: #d79aa8;
+	--color-light-pink: #e7c4cc;
+	--color-blush: #f9eff2;
+	--color-cream: #f8f5ec;
+	--color-white: #ffffff;
+
+	--font-poppins: "Poppins", sans-serif;
+	--font-lora: "Lora", serif;
+	--font-inter: "Inter", sans-serif;
 }

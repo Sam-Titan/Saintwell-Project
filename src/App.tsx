@@ -1,9 +1,10 @@
+import AssetTestPage from "./components/AssetTestPage";
+import { JarProvider } from "./theme/JarContext";
+
 export default function App() {
 	return (
-		<main className="flex min-h-screen items-center justify-center bg-cream">
-			<h1 className="text-4xl font-bold tracking-widest text-olive">
-				SAINTWELL
-			</h1>
-		</main>
+		<JarProvider>
+			<AssetTestPage />
+		</JarProvider>
 	);
 }

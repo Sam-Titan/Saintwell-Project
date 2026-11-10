@@ -12,3 +12,42 @@ test:
 lighthouse:
     pnpm build
     pnpm exec lhci autorun
+
+# Export brand images from brand/SAINTWELL.pdf (poppler + cwebp). Crop boxes are in px at 288 dpi (4x the 1440x810 pt slides).
+assets:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    pdf=brand/SAINTWELL.pdf
+    tmp=$(mktemp -d)
+    trap 'rm -rf "$tmp"' EXIT
+    mkdir -p public/textures/labels public/images
+    # labels: name page x1 y1 x2 y2 (label edges only, no slide background)
+    while read -r name page x1 y1 x2 y2; do
+      for w in 2048 1024; do
+        read -r x y W H < <(awk -v x1=$x1 -v y1=$y1 -v x2=$x2 -v y2=$y2 -v w=$w 'BEGIN{k=w/(x2-x1); printf "%d %d %d %d\n", x1*k+0.5, y1*k+0.5, w, (y2-y1)*k+0.5}')
+        r=$(awk -v x1=$x1 -v x2=$x2 -v w=$w 'BEGIN{printf "%.6f", 288*w/(x2-x1)}')
+        pdftoppm -r "$r" -f "$page" -l "$page" -x "$x" -y "$y" -W "$W" -H "$H" -png -singlefile "$pdf" "$tmp/$name-$w"
+        cwebp -quiet -q 90 "$tmp/$name-$w.png" -o "public/textures/labels/$name-$w.webp"
+      done
+    done <<'LABELS'
+    green-a 2 176 676 5582 2715
+    green-b 3 206 768 5592 2606
+    pink-a 6 187 641 5573 2599
+    pink-b 7 338 858 5422 2383
+    LABELS
+    # logos: SVG, page background removed, viewBox cropped to the logo
+    for spec in "logo-green-wide 1 266 307 908 199" "logo-pink-wide 5 266 307 908 199"; do
+      read -r name page x y w h <<<"$spec"
+      pdftocairo -svg -f "$page" -l "$page" "$pdf" "$tmp/$name.svg"
+      sed -E -e '/^<rect x="-144"/d' -e "s|^<svg (.*)width=\"[^\"]*\" height=\"[^\"]*\" viewBox=\"[^\"]*\">|<svg \1width=\"$w\" height=\"$h\" viewBox=\"$x $y $w $h\">|" "$tmp/$name.svg" > "public/images/$name.svg"
+    done
+    # stacked logo (page 9): keep only the visible paths (Canva hides the rest under olive rectangles + the jar photo)
+    pdftocairo -svg -f 9 -l 9 "$pdf" "$tmp/p9.svg"
+    { echo '<svg xmlns="http://www.w3.org/2000/svg" width="453" height="369" viewBox="179 190 453 369">'; sed -n '3,9p;30,35p;54p;57,66p;82,89p;96p' "$tmp/p9.svg"; } > public/images/logo-stacked.svg
+    # fallback jars: original embedded images from pages 4 (green) and 8 (pink), A then B
+    for spec in "green 4" "pink 8"; do
+      read -r colour page <<<"$spec"
+      pdfimages -png -f "$page" -l "$page" "$pdf" "$tmp/$colour"
+      cwebp -quiet -q 85 "$tmp/$colour-000.png" -o "public/images/jar-$colour-a.webp"
+      cwebp -quiet -q 85 "$tmp/$colour-001.png" -o "public/images/jar-$colour-b.webp"
+    done

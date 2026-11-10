@@ -4,13 +4,34 @@ Claude Code: add a new entry at the TOP at the end of every session. Keep it sho
 
 ## Current state
 
-- Phase: **0 — Setup** approved by Sam. Next: **1 — Brand assets** (not started)
+- Phase: **1 — Brand assets**, built, waiting for Sam's check of the exports
 - Branch: `main` (only branch)
 - Blockers: none
 
 ---
 
 ## Session log
+
+### 2026-11-10 — Phase 1
+**Done**
+- `just assets` (poppler + cwebp) exports everything from the PDF. Crop boxes refined from pixel edges, not stretched.
+- Labels (WebP, 2048 / 1024 wide): green-a 2048×772 / 1024×386; green-b 2048×699 / 1024×349; pink-a 2048×745 / 1024×372; pink-b 2048×614 / 1024×307. Total 0.5 MB.
+- Logos (SVG, no background): logo-green-wide, logo-pink-wide, logo-stacked. Stacked logo is rebuilt from the visible paths only: Canva hid the rest under olive rectangles and the jar photo. Its line numbers are fixed to this PDF.
+- Fallback jars (original embedded images, WebP, 820×1229): jar-green-a/b, jar-pink-a/b.
+- Fonts in `public/fonts/` with OFL licences: Poppins 400/500/700, Lora 700/700 italic, Inter (one variable file, 400–700). Latin subset, from Google Fonts' gstatic URLs.
+- `globals.css` (@font-face + colour/font tokens), `theme/tokens.ts`, `theme/JarContext.tsx` (default green + A), `content/copy.ts` (label text, rest `[PLACEHOLDER]`).
+- Test page `src/components/AssetTestPage.tsx` (remove later). Screenshots: `.playwright-mcp/phase1-testpage-full.png`, `phase1-logos.png`.
+- `just check` and `just test` pass. Console: only the favicon 404 (Phase 5).
+- D-38, D-39 logged; CLAUDE.md Assets line and PHASES wording updated.
+
+**Next**
+- Sam: check exports, approve, push. Then Phase 2.
+
+**Blockers / questions for Sam**
+- Label A/B shapes differ (2.65–3.33:1); fit on the jar is a Phase 2 job.
+- Page 9 jar photo not exported (only pages 4 and 8 are fallbacks).
+
+---
 
 ### 2026-11-10 — Phase 0
 **Done**

@@ -36,15 +36,15 @@ Goal: empty project that runs locally with all tooling.
 
 Goal: all brand images, colours and fonts ready to use.
 
-- [ ] Install poppler-utils; `just assets` recipe (pdftoppm)
-- [ ] Export 4 labels (green A/B, pink A/B), cropped to label edges, at 2048 px and 1024 px (WebP + PNG)
-- [ ] Export logos: green wide, pink wide, stacked; SVG if possible, else PNG
-- [ ] Export fallback jar images from pages 4 and 8 (WebP)
-- [ ] Fonts (.woff2) in `public/fonts/` with `@font-face`
-- [ ] Colour tokens in `globals.css` + `theme/tokens.ts` for green and pink themes
-- [ ] `JarContext` (colour + label) with default Green + A
-- [ ] `content/copy.ts` with label text and `[PLACEHOLDER]` items
-- [ ] Simple test page showing logos, labels, colours, fonts (removed later)
+- [x] Install poppler-utils; `just assets` recipe (pdftoppm)
+- [x] Export 4 labels (green A/B, pink A/B), cropped to label edges, at 2048 px and 1024 px (WebP only)
+- [x] Export logos: green wide, pink wide, stacked; SVG if possible, else PNG
+- [x] Export fallback jar images from pages 4 and 8 (WebP)
+- [x] Fonts (.woff2) in `public/fonts/` with `@font-face`
+- [x] Colour tokens in `globals.css` + `theme/tokens.ts` for green and pink themes
+- [x] `JarContext` (colour + label) with default Green + A
+- [x] `content/copy.ts` with label text and `[PLACEHOLDER]` items
+- [x] Simple test page showing logos, labels, colours, fonts (removed later)
 - [ ] Sam checks the exports look right
 
 ## Phase 2 — 3D models

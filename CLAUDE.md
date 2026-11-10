@@ -31,7 +31,7 @@ Owner: Sam. Client: SAINTWELL. Market: India.
 - Setup: WSL2 (Ubuntu), Node 24, pnpm (corepack), just, Git + GitHub, Lefthook + Gitleaks
 - Frontend: Vite, React, TypeScript, Tailwind CSS v4, lucide-react, Motion
 - 3D: three, @react-three/fiber, @react-three/drei, @react-three/postprocessing, r3f-perf (dev only), Blender (pinned LTS, headless), @gltf-transform/cli, gltfjsx
-- Assets: poppler-utils (pdftoppm)
+- Assets: poppler-utils (pdftoppm, pdftocairo, pdfimages), webp (cwebp)
 - Quality: Biome, vitest, Playwright, @playwright/mcp, @lhci/cli, GitHub Actions, Dependabot
 - Hosting: Netlify (Phase 7 only)
 
